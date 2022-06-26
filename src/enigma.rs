@@ -17,56 +17,89 @@ impl Enigma {
     }
 
     fn encode_char(&mut self, c: char) -> char {
-        self.rotors[0].rotate();
-
         self.advance_rotors();
 
-        let first_pass = self
-            .rotors
-            .iter()
-            .fold(c, |acc, current_rotor| current_rotor.encode(acc));
+        let rotor_pass = self.rotor_pass(c);
 
-        let reflect_pass = self.reflector.encode(first_pass);
+        let reflect_pass = self.reflect_pass(rotor_pass);
 
-        let reverse_rotor_pass = self
-            .rotors
-            .iter()
-            .fold(reflect_pass, |acc, current_rotor| current_rotor.decode(acc));
+        let reverse_rotor_pass = self.reverse_rotor_pass(reflect_pass);
         reverse_rotor_pass
     }
 
-    fn advance_rotors(&mut self){
+    fn rotor_pass(&mut self, c: char) -> char {
+        self.rotors
+            .iter()
+            .fold(c, |acc, current_rotor| current_rotor.encode(acc))
+    }
+
+    fn reflect_pass(&mut self, c: char) -> char {
+        self.reflector.encode(c)
+    }
+
+    fn reverse_rotor_pass(&mut self, c: char) -> char {
+        self.rotors
+            .iter()
+            .rev()
+            .fold(c, |acc, current_rotor| current_rotor.decode(acc))
+    }
+
+    fn advance_rotors(&mut self) {
+        self.rotors[0].rotate();
+
         let mut iterhandle = self.rotors.iter_mut().peekable();
 
-        while let Some(el) = iterhandle.next(){
-            match iterhandle.peek_mut(){
-                Some(next_rotor)=> match el.should_advance_next(){
-                    true => {next_rotor.rotate();},
-                    false => ()
+        while let Some(el) = iterhandle.next() {
+            match iterhandle.peek_mut() {
+                Some(next_rotor) => match el.should_advance_next() {
+                    true => {
+                        next_rotor.rotate();
+                    }
+                    false => (),
                 },
-                None => ()
+                None => (),
             }
         }
     }
 }
 
 #[cfg(test)]
-mod tests{
-    use crate::rotor::rotors;
-    use crate::reflector::reflectors;
+mod tests {
     use super::*;
+    use crate::reflector::reflectors;
+    use crate::rotor::RotorList;
 
     #[test]
-    #[ignore]
-    fn codec_e2e(){
-        let rotor_config = vec![Rotor::from(rotors::DEBUG,'A')];
-        let rotor_config_2 = rotor_config.clone();
-        let message = "TESTINGTESTINGONETWOTHREE";
-        let mut enigma_sender = Enigma::new(rotor_config,reflectors::DEBUG);
-        let mut enigma_reciever = Enigma::new(rotor_config_2,reflectors::DEBUG);
+    fn rotor_identity() {
+        let rotor_config = vec![
+            Rotor::from(RotorList::I, 'X'),
+            Rotor::from(RotorList::V,'N'),
+            Rotor::from(RotorList::VIII,'J')
+        ];
+        let reflector = reflectors::A;
 
-        let ciphertext = enigma_sender.encode(message.to_string());
-        let plaintext = enigma_reciever.encode(ciphertext);
-        assert_eq!(plaintext,message)
+        let mut enigma = Enigma::new(rotor_config, reflector);
+
+        (b'A'..b'Z').into_iter().for_each(|x| {
+            let rotor_pass = enigma.rotor_pass(x as char);
+            let reflector_pass = enigma.reflect_pass(rotor_pass);
+            let reverse_rotor_pass = enigma.reverse_rotor_pass(reflector_pass);
+
+            println!(
+                "Rotors: {}, Reflector: {}, Rev_Rotors: {}",
+                rotor_pass, reflector_pass, reverse_rotor_pass
+            );
+
+            let rotor_pass_2 = enigma.rotor_pass(reverse_rotor_pass);
+            let reflector_pass_2 = enigma.reflect_pass(rotor_pass_2);
+            let rev2 = enigma.reverse_rotor_pass(reflector_pass_2);
+
+            println!(
+                "Rotors: {}, Reflector: {}, Rev_Rotors: {}",
+                rotor_pass_2, reflector_pass_2, rev2
+            );
+
+            assert_eq!(x as char,rev2);
+        })
     }
 }

@@ -1,18 +1,9 @@
 #![allow(dead_code)]
-/*pub mod rotors {
-    use crate::rotor::Rotor;
-    pub const I: Rotor = Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q']);
-    pub const II: Rotor = Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E']);
-    pub const III: Rotor = Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V']);
-    pub const IV: Rotor = Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J']);
-    pub const V: Rotor = Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z']);
-    pub const VI: Rotor = Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M']);
-    pub const VII: Rotor = Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M']);
-    pub const VIII: Rotor = Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M']);
-    pub const DEBUG: Rotor = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[]);
-}*/
 
-pub enum rotors {
+use enum_iterator::Sequence;
+
+#[derive(Sequence)]
+pub enum RotorList {
     I,
     II,
     III,
@@ -41,22 +32,21 @@ impl Rotor {
         }
     }
 
-    pub fn from(rotor_type: rotors, position: char) -> Rotor {
+    pub fn from(rotor_type: RotorList, position: char) -> Rotor {
         match rotor_type {
-            rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
-            rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
-            rotors::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
-            rotors::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
-            rotors::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
-            rotors::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
-            rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
-            rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
-            rotors::DEBUG => Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[], position),
+            RotorList::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
+            RotorList::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
+            RotorList::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
+            RotorList::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
+            RotorList::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
+            RotorList::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
+            RotorList::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
+            RotorList::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
+            RotorList::DEBUG => Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[], position),
         }
     }
 
     pub fn rotate(&mut self) -> char {
-
         match self.position {
             'A'..='Y' => self.position = (self.position as u8 + 1) as char,
             'Z' => self.position = 'A',
@@ -118,7 +108,7 @@ mod tests {
 
     #[test]
     fn codec() {
-        let current_rotor = Rotor::from(rotors::DEBUG,'C');
+        let current_rotor = Rotor::from(RotorList::DEBUG, 'C');
         ('A'..='Z').into_iter().for_each(|c| {
             let ciphertext = current_rotor.encode(c);
             let plaintext = current_rotor.decode(ciphertext);
@@ -133,14 +123,14 @@ mod tests {
 
     #[test]
     fn rotation() {
-        let mut current_rotor = Rotor::from(rotors::I,'X');
-        (0..26).into_iter().for_each(|x| {
+        let mut current_rotor = Rotor::from(RotorList::I, 'A');
+        (0..=200).into_iter().for_each(|_| {
             const OFFSET: u8 = b'A';
-            let inputchar = (x + OFFSET) as char;
-            println!("{}", inputchar);
+            let inputchar = current_rotor.position;
+            
 
             let new_position = current_rotor.rotate();
-
+            println!("{}: {}",inputchar,new_position);
             match inputchar {
                 'A'..='Y' => assert_eq!(new_position, (inputchar as u8 + 1) as char),
                 'Z' => assert_eq!(new_position, 'A'),
@@ -151,7 +141,7 @@ mod tests {
 
     #[test]
     fn should_advance_next() {
-        let mut current_rotor = Rotor::from(rotors::I,'B');
+        let mut current_rotor = Rotor::from(RotorList::I, 'B');
         (0..26).into_iter().for_each(|x| {
             const OFFSET: u8 = b'A';
             let inputchar = (x + OFFSET) as char;

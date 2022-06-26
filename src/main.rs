@@ -3,12 +3,12 @@ mod reflector;
 mod enigma;
 
 use crate::enigma::{Enigma};
-use crate::rotor::{rotors, Rotor};
+use crate::rotor::{RotorList, Rotor};
 use crate::reflector::{reflectors};
 
 fn main() {
     let message = "HELLOFROMENIGMA";
-    let rotor_config = vec![Rotor::from(rotors::I,'A')];
+    let rotor_config = vec![Rotor::from(RotorList::I,'A')];
 
     let rotor_config_2 = rotor_config.clone();
     let mut enigma_machine = Enigma::new(rotor_config,reflectors::A);
