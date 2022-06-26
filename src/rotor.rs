@@ -38,7 +38,7 @@ impl Rotor {
         }
     }
 
-    pub fn rotate(&mut self) {
+    pub fn rotate(&mut self) -> char {
         const OFFSET: u8 = b'A';
 
         match self.position {
@@ -48,6 +48,8 @@ impl Rotor {
                 panic!("By the time rotate is invoked, position should be a valid char between A-Z")
             }
         }
+
+        self.position
     }
 
     pub fn should_advance_next(&self) -> bool {
@@ -91,7 +93,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_rotor() {
+    fn codec() {
         let current_rotor = rotors::I;
         ('A'..='Z').into_iter().for_each(|c| {
             let ciphertext = current_rotor.encode(c);
@@ -102,6 +104,47 @@ mod tests {
                 c, ciphertext, plaintext
             );
             assert_eq!(c, plaintext);
+        })
+    }
+
+    #[test]
+    fn rotation() {
+        let mut current_rotor = rotors::I;
+        (0..26).into_iter().for_each(|x| {
+            const OFFSET: u8 = b'A';
+            let inputchar = (x + OFFSET) as char;
+            println!("{}", inputchar);
+
+            let new_position = current_rotor.rotate();
+
+            match inputchar {
+                'A'..='Y'=> assert_eq!(new_position,(inputchar as u8 + 1) as char),
+                'Z' => assert_eq!(new_position,'A'),
+                _ => panic!("Position should only be between A-Z after rotation")
+            }
+        })
+    }
+
+    #[test]
+    fn should_advance_next()
+    {
+        let mut current_rotor = rotors::I;
+        (0..26).into_iter().for_each(|x| {
+            const OFFSET: u8 = b'A';
+            let inputchar = (x + OFFSET) as char;
+            println!("{}", inputchar);
+
+            current_rotor.rotate();
+
+            let does_advance_next = current_rotor.should_advance_next();
+            current_rotor.notch.iter().for_each(|notch|{
+                if current_rotor.position as u8 == *notch as u8 + 1{
+                    assert_eq!(true,does_advance_next)
+                }
+                else {
+                    assert_eq!(false,does_advance_next)
+                }
+            })
         })
     }
 }

@@ -30,7 +30,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_reflector() {
+    fn reflector() {
         let current_reflector = reflectors::A;
         ('A'..='Z').into_iter().for_each(|c| {
             let ciphertext = current_reflector.encode(c);

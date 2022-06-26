@@ -24,7 +24,7 @@ impl Enigma {
         while let Some(el) = iterhandle.next(){
             match iterhandle.peek_mut(){
                 Some(next_rotor)=> match el.should_advance_next(){
-                    true => next_rotor.rotate(),
+                    true => {next_rotor.rotate();},
                     false => ()
                 },
                 None => ()
