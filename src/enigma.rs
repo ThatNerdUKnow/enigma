@@ -21,16 +21,6 @@ impl Enigma {
 
         let mut iterhandle = self.rotors.iter_mut().peekable();
 
-        /*for el in iterhandle {
-            match iterhandle.peek_mut() {
-                Some(next_rotor) => match el.should_advance_next() {
-                    true => next_rotor.rotate(),
-                    false => (),
-                },
-                None => (),
-            }
-        }*/
-
         while let Some(el) = iterhandle.next(){
             match iterhandle.peek_mut(){
                 Some(next_rotor)=> match el.should_advance_next(){
@@ -41,8 +31,6 @@ impl Enigma {
             }
         }
 
-
-
         let first_pass = self
             .rotors
             .iter()
@@ -50,11 +38,10 @@ impl Enigma {
 
         let reflect_pass = self.reflector.encode(first_pass);
 
-        let last_rotor_pass = self
+        let reverse_rotor_pass = self
             .rotors
             .iter()
-            .fold(reflect_pass, |acc, current_rotor| current_rotor.encode(acc));
-
-        last_rotor_pass
+            .fold(reflect_pass, |acc, current_rotor| current_rotor.decode(acc));
+        reverse_rotor_pass
     }
 }

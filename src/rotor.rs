@@ -39,6 +39,8 @@ impl Rotor {
     }
 
     pub fn rotate(&mut self) {
+        const OFFSET: u8 = b'A';
+
         match self.position {
             'A'..='Y' => self.position = (self.position as u8 + 1) as char,
             'Z' => self.position = 'A',
@@ -48,10 +50,10 @@ impl Rotor {
         }
     }
 
-    pub fn should_advance_next(&self)->bool{
-        self.notch.iter().any(|notch|{
+    pub fn should_advance_next(&self) -> bool {
+        self.notch.iter().any(|notch| {
             let mut notch_position = *notch as u8 + 1;
-            if notch_position >b'Z'{
+            if notch_position > b'Z' {
                 notch_position = b'A'
             }
             self.position == notch_position as char
@@ -60,12 +62,11 @@ impl Rotor {
 
     pub fn encode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
-        let mut index = c as u8 - OFFSET + self.position as u8;
+        let mut index: u8 = c as u8 - OFFSET + self.position as u8 - OFFSET;
 
-        if index >= b'Z' {
-            index -= b'Z';
+        if index > b'Z' - OFFSET {
+            index -= b'Z' - OFFSET;
         }
-
         self.cipher.chars().nth(index as usize).unwrap()
     }
 
@@ -78,7 +79,29 @@ impl Rotor {
             .unwrap()
             .try_into()
             .unwrap();
+
         let decoded: char = (position + OFFSET) as char;
+
         decoded
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rotor() {
+        let current_rotor = rotors::I;
+        ('A'..='Z').into_iter().for_each(|c| {
+            let ciphertext = current_rotor.encode(c);
+            let plaintext = current_rotor.decode(ciphertext);
+
+            println!(
+                "{}: Encodes to: {}, Decodes to: {}",
+                c, ciphertext, plaintext
+            );
+            assert_eq!(c, plaintext);
+        })
     }
 }

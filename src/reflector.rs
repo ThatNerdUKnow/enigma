@@ -22,3 +22,25 @@ pub mod reflectors {
     pub const B: Reflector = Reflector::new("YRUHQSLDPXNGOKMIEBFZCWVJAT");
     pub const C: Reflector = Reflector::new("FVPJIAOYEDRZXWGCTKUQSBNMHL");
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_reflector() {
+        let current_reflector = reflectors::A;
+        ('A'..='Z').into_iter().for_each(|c| {
+            let ciphertext = current_reflector.encode(c);
+            let plaintext = current_reflector.encode(ciphertext);
+
+            println!(
+                "{}: Encodes to: {}, Decodes to: {}",
+                c, ciphertext, plaintext
+            );
+            assert_eq!(c, plaintext);
+        })
+    }
+}
