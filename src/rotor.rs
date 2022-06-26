@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+/// This enum represents each available rotor on the enigma machine plus an extra rotor used for debug purposes.
+/// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
 pub enum RotorList {
     I,
     II,
@@ -12,6 +14,7 @@ pub enum RotorList {
     DEBUG,
 }
 
+/// Struct used in the implementation of the rotor mechanism
 #[derive(Clone)]
 pub struct Rotor {
     cipher: &'static str,
@@ -20,6 +23,11 @@ pub struct Rotor {
 }
 
 impl Rotor {
+
+    /// Generates a new Rotor.
+    /// The cipher is a 26 character long string representing the substitution cipher for the rotor
+    /// The cipher must only contain values `A-Z` inclusive and characters may not be repeated  
+    /// The `position` param must only be a char between `A-Z`
     fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
         // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
         Rotor {
@@ -29,6 +37,7 @@ impl Rotor {
         }
     }
 
+    /// Returns a pre-generated rotor given a member of the `RotorList` enum and a position between `A-Z`
     pub fn from(rotor_type: RotorList, position: char) -> Rotor {
         match rotor_type {
             RotorList::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
@@ -43,6 +52,7 @@ impl Rotor {
         }
     }
 
+    /// Used to advance the position of the rotor, returns a char representing the rotor's final position
     pub fn rotate(&mut self) -> char {
         match self.position {
             'A'..='Y' => self.position = (self.position as u8 + 1) as char,
@@ -55,6 +65,7 @@ impl Rotor {
         self.position
     }
 
+    /// Used to determine if the next rotor in the sequence should rotate
     pub fn should_advance_next(&self) -> bool {
         self.notch.iter().any(|notch| {
             let mut notch_position = *notch as u8 + 1;
@@ -65,6 +76,7 @@ impl Rotor {
         })
     }
 
+    /// Encodes the given char
     pub fn encode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
         let plaintext = c as u8 - OFFSET;
@@ -77,6 +89,7 @@ impl Rotor {
         self.cipher.chars().nth(index as usize).unwrap()
     }
 
+    /// Decodes the given char
     pub fn decode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
         let ciphertext: u8 = self // Index of first occurance of the given char in the cipher string

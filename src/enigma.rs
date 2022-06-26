@@ -1,49 +1,58 @@
 use crate::reflector::Reflector;
 use crate::rotor::Rotor;
 
-pub(crate) struct Enigma {
+pub struct Enigma {
     reflector: Reflector,
     rotors: Vec<Rotor>,
 }
 
 impl Enigma {
+
+    /// Returns a new Enigma instance
     pub fn new(rotors: Vec<Rotor>, reflector: Reflector) -> Enigma {
         Enigma { rotors, reflector }
     }
 
+    /// Encodes an entire string. Note that the only allowed characters are `A-Z` inclusive
     pub fn encode(&mut self, message: String) -> String {
         let cipher_text = message.chars().map(|c| self.encode_char(c)).collect();
         cipher_text
     }
 
+    /// Encodes a single char
     fn encode_char(&mut self, c: char) -> char {
         self.advance_rotors();
 
-        let rotor_pass = self.rotor_pass(c);
+        let rotor_pass = self.rotor_encode(c);
 
-        let reflect_pass = self.reflect_pass(rotor_pass);
+        let reflect_pass = self.reflect(rotor_pass);
 
-        let reverse_rotor_pass = self.reverse_rotor_pass(reflect_pass);
+        let reverse_rotor_pass = self.rotor_decode(reflect_pass);
         reverse_rotor_pass
     }
 
-    fn rotor_pass(&mut self, c: char) -> char {
+    /// This is the first encoding pass of the rotor mechanism
+    fn rotor_encode(&mut self, c: char) -> char {
         self.rotors
             .iter()
             .fold(c, |acc, current_rotor| current_rotor.encode(acc))
     }
 
-    fn reflect_pass(&mut self, c: char) -> char {
+    /// The result of the first pass of the rotor mechanism is sent through the reflector.
+    fn reflect(&mut self, c: char) -> char {
         self.reflector.encode(c)
     }
 
-    fn reverse_rotor_pass(&mut self, c: char) -> char {
+    /// The character comes out of the reflector and then backwards through the rotor mechanism
+    /// This property allows the enigma machine to be used as both an encoder and decoder
+    fn rotor_decode(&mut self, c: char) -> char {
         self.rotors
             .iter()
             .rev()
             .fold(c, |acc, current_rotor| current_rotor.decode(acc))
     }
 
+    /// Advances the first rotor and then checks if subsequent rotors would rotate along
     fn advance_rotors(&mut self) {
         self.rotors[0].rotate();
 
@@ -66,7 +75,7 @@ impl Enigma {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::reflector::reflectors;
+    use crate::reflector::ReflectorList;
     use crate::rotor::RotorList;
 
     #[test]
@@ -76,23 +85,23 @@ mod tests {
             Rotor::from(RotorList::V,'N'),
             Rotor::from(RotorList::VIII,'J')
         ];
-        let reflector = reflectors::A;
+        let reflector = Reflector::from(ReflectorList::A);
 
         let mut enigma = Enigma::new(rotor_config, reflector);
 
         (b'A'..b'Z').into_iter().for_each(|x| {
-            let rotor_pass = enigma.rotor_pass(x as char);
-            let reflector_pass = enigma.reflect_pass(rotor_pass);
-            let reverse_rotor_pass = enigma.reverse_rotor_pass(reflector_pass);
+            let rotor_pass = enigma.rotor_encode(x as char);
+            let reflector_pass = enigma.reflect(rotor_pass);
+            let reverse_rotor_pass = enigma.rotor_decode(reflector_pass);
 
             println!(
                 "Rotors: {}, Reflector: {}, Rev_Rotors: {}",
                 rotor_pass, reflector_pass, reverse_rotor_pass
             );
 
-            let rotor_pass_2 = enigma.rotor_pass(reverse_rotor_pass);
-            let reflector_pass_2 = enigma.reflect_pass(rotor_pass_2);
-            let rev2 = enigma.reverse_rotor_pass(reflector_pass_2);
+            let rotor_pass_2 = enigma.rotor_encode(reverse_rotor_pass);
+            let reflector_pass_2 = enigma.reflect(rotor_pass_2);
+            let rev2 = enigma.rotor_decode(reflector_pass_2);
 
             println!(
                 "Rotors: {}, Reflector: {}, Rev_Rotors: {}",
