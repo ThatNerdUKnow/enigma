@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-
-pub mod rotors {
+/*pub mod rotors {
     use crate::rotor::Rotor;
     pub const I: Rotor = Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q']);
     pub const II: Rotor = Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E']);
@@ -11,6 +10,18 @@ pub mod rotors {
     pub const VII: Rotor = Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M']);
     pub const VIII: Rotor = Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M']);
     pub const DEBUG: Rotor = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[]);
+}*/
+
+pub enum rotors {
+    I,
+    II,
+    III,
+    IV,
+    V,
+    VI,
+    VII,
+    VIII,
+    DEBUG,
 }
 
 #[derive(Clone)]
@@ -21,27 +32,30 @@ pub struct Rotor {
 }
 
 impl Rotor {
-    const fn new(cipher: &'static str, notch: &'static [char]) -> Rotor {
+    fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
         // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
         Rotor {
             cipher,
             notch,
-            position: 'A',
+            position,
         }
     }
 
-    fn set_position(&mut self, position: char) -> Result<(), &'static str> {
-        match position {
-            'A'..='Z' => {
-                self.position = position;
-                Ok(())
-            }
-            _ => Err("Position must be between A and Z"),
+    pub fn from(rotor_type: rotors, position: char) -> Rotor {
+        match rotor_type {
+            rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
+            rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
+            rotors::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
+            rotors::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
+            rotors::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
+            rotors::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
+            rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
+            rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
+            rotors::DEBUG => Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[], position),
         }
     }
 
     pub fn rotate(&mut self) -> char {
-        const OFFSET: u8 = b'A';
 
         match self.position {
             'A'..='Y' => self.position = (self.position as u8 + 1) as char,
@@ -86,19 +100,14 @@ impl Rotor {
             .try_into()
             .unwrap();
 
-        let position_offset = self.position as u8 - OFFSET;  // rotation index
-        
-        
+        let position_offset = self.position as u8 - OFFSET; // rotation index
 
         let mut decoded: u8 = (ciphertext + OFFSET) - position_offset;
 
-        
         if ciphertext < position_offset {
-            
             decoded = b'Z' - position_offset + ciphertext + 1
         }
 
-        
         decoded as char
     }
 }
@@ -109,9 +118,7 @@ mod tests {
 
     #[test]
     fn codec() {
-        let mut current_rotor = rotors::DEBUG;
-        current_rotor.rotate();
-        current_rotor.rotate();
+        let current_rotor = Rotor::from(rotors::DEBUG,'C');
         ('A'..='Z').into_iter().for_each(|c| {
             let ciphertext = current_rotor.encode(c);
             let plaintext = current_rotor.decode(ciphertext);
@@ -126,7 +133,7 @@ mod tests {
 
     #[test]
     fn rotation() {
-        let mut current_rotor = rotors::I;
+        let mut current_rotor = Rotor::from(rotors::I,'X');
         (0..26).into_iter().for_each(|x| {
             const OFFSET: u8 = b'A';
             let inputchar = (x + OFFSET) as char;
@@ -144,7 +151,7 @@ mod tests {
 
     #[test]
     fn should_advance_next() {
-        let mut current_rotor = rotors::I;
+        let mut current_rotor = Rotor::from(rotors::I,'B');
         (0..26).into_iter().for_each(|x| {
             const OFFSET: u8 = b'A';
             let inputchar = (x + OFFSET) as char;

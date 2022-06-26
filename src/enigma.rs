@@ -59,7 +59,7 @@ mod tests{
     #[test]
     #[ignore]
     fn codec_e2e(){
-        let rotor_config = vec![rotors::DEBUG];
+        let rotor_config = vec![Rotor::from(rotors::DEBUG,'A')];
         let rotor_config_2 = rotor_config.clone();
         let message = "TESTINGTESTINGONETWOTHREE";
         let mut enigma_sender = Enigma::new(rotor_config,reflectors::DEBUG);
