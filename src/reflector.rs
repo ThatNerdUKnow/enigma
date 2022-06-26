@@ -21,6 +21,7 @@ pub mod reflectors {
     pub const A: Reflector = Reflector::new("EJMZALYXVBWFCRQUONTSPIKHGD");
     pub const B: Reflector = Reflector::new("YRUHQSLDPXNGOKMIEBFZCWVJAT");
     pub const C: Reflector = Reflector::new("FVPJIAOYEDRZXWGCTKUQSBNMHL");
+    pub const DEBUG: Reflector = Reflector::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 }
 
 

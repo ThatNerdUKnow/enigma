@@ -10,8 +10,10 @@ pub mod rotors {
     pub const VI: Rotor = Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M']);
     pub const VII: Rotor = Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M']);
     pub const VIII: Rotor = Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M']);
+    pub const DEBUG: Rotor = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[]);
 }
 
+#[derive(Clone)]
 pub struct Rotor {
     cipher: &'static str,
     notch: &'static [char],
@@ -64,17 +66,19 @@ impl Rotor {
 
     pub fn encode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
-        let mut index: u8 = c as u8 - OFFSET + self.position as u8 - OFFSET;
+        let plaintext = c as u8 - OFFSET;
+        let position = self.position as u8 - OFFSET;
+        let mut index: u8 = plaintext + position;
 
         if index > b'Z' - OFFSET {
-            index -= b'Z' - OFFSET;
+            index -= b'Z' - OFFSET + 1;
         }
         self.cipher.chars().nth(index as usize).unwrap()
     }
 
     pub fn decode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
-        let position: u8 = self
+        let ciphertext: u8 = self // Index of first occurance of the given char in the cipher string
             .cipher
             .chars()
             .position(|x| x == c)
@@ -82,9 +86,20 @@ impl Rotor {
             .try_into()
             .unwrap();
 
-        let decoded: char = (position + OFFSET) as char;
+        let position_offset = self.position as u8 - OFFSET;  // rotation index
+        
+        
 
-        decoded
+        let mut decoded: u8 = (ciphertext + OFFSET) - position_offset;
+
+        
+        if ciphertext < position_offset {
+            
+            decoded = b'Z' - position_offset + ciphertext + 1
+        }
+
+        
+        decoded as char
     }
 }
 
@@ -94,7 +109,9 @@ mod tests {
 
     #[test]
     fn codec() {
-        let current_rotor = rotors::I;
+        let mut current_rotor = rotors::DEBUG;
+        current_rotor.rotate();
+        current_rotor.rotate();
         ('A'..='Z').into_iter().for_each(|c| {
             let ciphertext = current_rotor.encode(c);
             let plaintext = current_rotor.decode(ciphertext);
@@ -118,16 +135,15 @@ mod tests {
             let new_position = current_rotor.rotate();
 
             match inputchar {
-                'A'..='Y'=> assert_eq!(new_position,(inputchar as u8 + 1) as char),
-                'Z' => assert_eq!(new_position,'A'),
-                _ => panic!("Position should only be between A-Z after rotation")
+                'A'..='Y' => assert_eq!(new_position, (inputchar as u8 + 1) as char),
+                'Z' => assert_eq!(new_position, 'A'),
+                _ => panic!("Position should only be between A-Z after rotation"),
             }
         })
     }
 
     #[test]
-    fn should_advance_next()
-    {
+    fn should_advance_next() {
         let mut current_rotor = rotors::I;
         (0..26).into_iter().for_each(|x| {
             const OFFSET: u8 = b'A';
@@ -137,12 +153,11 @@ mod tests {
             current_rotor.rotate();
 
             let does_advance_next = current_rotor.should_advance_next();
-            current_rotor.notch.iter().for_each(|notch|{
-                if current_rotor.position as u8 == *notch as u8 + 1{
-                    assert_eq!(true,does_advance_next)
-                }
-                else {
-                    assert_eq!(false,does_advance_next)
+            current_rotor.notch.iter().for_each(|notch| {
+                if current_rotor.position as u8 == *notch as u8 + 1 {
+                    assert_eq!(true, does_advance_next)
+                } else {
+                    assert_eq!(false, does_advance_next)
                 }
             })
         })
