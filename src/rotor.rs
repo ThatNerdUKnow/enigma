@@ -48,6 +48,16 @@ impl Rotor {
         }
     }
 
+    pub fn should_advance_next(&self)->bool{
+        self.notch.iter().any(|notch|{
+            let mut notch_position = *notch as u8 + 1;
+            if notch_position >b'Z'{
+                notch_position = b'A'
+            }
+            self.position == notch_position as char
+        })
+    }
+
     pub fn encode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
         let mut index = c as u8 - OFFSET + self.position as u8;
