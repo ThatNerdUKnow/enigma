@@ -1,8 +1,5 @@
 #![allow(dead_code)]
 
-use enum_iterator::Sequence;
-
-#[derive(Sequence)]
 pub enum RotorList {
     I,
     II,
