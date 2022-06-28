@@ -10,7 +10,7 @@ fn main() {
     let message = "HELLOFROMENIGMA";
     let rotor_config = vec![Rotor::from(RotorList::I,'A')];
 
-    let rotor_config_2 = rotor_config.clone();
+    let rotor_config_2 = vec![Rotor::from(RotorList::I,'A')];
     let mut enigma_machine = Enigma::new(rotor_config,Reflector::from(ReflectorList::B));
     let mut enigma_2 = Enigma::new(rotor_config_2,Reflector::from(ReflectorList::B));
 

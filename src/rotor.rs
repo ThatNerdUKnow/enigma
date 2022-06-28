@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use itertools::Itertools;
+use prae::Wrapper;
 
 /// This enum represents each available rotor on the enigma machine plus an extra rotor used for debug purposes.
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
@@ -15,15 +17,38 @@ pub enum RotorList {
 }
 
 /// Struct used in the implementation of the rotor mechanism
-#[derive(Clone)]
 pub struct Rotor {
-    cipher: &'static str,
+    cipher: RotorCipher,
     notch: &'static [char],
     position: char,
 }
 
-impl Rotor {
+prae::define! {
+    #[derive(Debug)]
+    pub RotorCipher: &'static str;
+    ensure |cipher|{
+        let length_condition = cipher.len() == 26;
 
+        let unique_condition = cipher.chars().unique().count() == 26;
+
+        let mapping_condition = cipher.
+        chars()
+        .map(|c|{
+            const OFFSET: u8 = b'A';
+            let c = c as u8 - OFFSET;
+            cipher
+            .chars()
+            .nth(c as usize)
+            .unwrap()
+        })
+        .unique()
+        .count() == 26;
+
+        length_condition && unique_condition && mapping_condition
+    };
+}
+
+impl Rotor {
     /// Generates a new Rotor.
     /// The cipher is a 26 character long string representing the substitution cipher for the rotor
     /// The cipher must only contain values `A-Z` inclusive and characters may not be repeated  
@@ -31,7 +56,7 @@ impl Rotor {
     fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
         // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
         Rotor {
-            cipher,
+            cipher: RotorCipher::new(cipher).unwrap(),
             notch,
             position,
         }
@@ -86,7 +111,7 @@ impl Rotor {
         if index > b'Z' - OFFSET {
             index -= b'Z' - OFFSET + 1;
         }
-        self.cipher.chars().nth(index as usize).unwrap()
+        self.cipher.get().chars().nth(index as usize).unwrap()
     }
 
     /// Decodes the given char
@@ -94,6 +119,7 @@ impl Rotor {
         const OFFSET: u8 = b'A';
         let ciphertext: u8 = self // Index of first occurance of the given char in the cipher string
             .cipher
+            .get()
             .chars()
             .position(|x| x == c)
             .unwrap()
@@ -137,10 +163,9 @@ mod tests {
         (0..=200).into_iter().for_each(|_| {
             const OFFSET: u8 = b'A';
             let inputchar = current_rotor.position;
-            
 
             let new_position = current_rotor.rotate();
-            println!("{}: {}",inputchar,new_position);
+            println!("{}: {}", inputchar, new_position);
             match inputchar {
                 'A'..='Y' => assert_eq!(new_position, (inputchar as u8 + 1) as char),
                 'Z' => assert_eq!(new_position, 'A'),

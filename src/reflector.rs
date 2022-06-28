@@ -3,7 +3,6 @@
 use prae::Wrapper;
 use itertools::Itertools;
 pub struct Reflector {
-    //cipher: &'static str,
     cipher: ReflectorCipher,
 }
 
