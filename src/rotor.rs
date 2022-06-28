@@ -194,4 +194,49 @@ mod tests {
             })
         })
     }
+
+    #[test]
+    fn construct_i() {
+        Rotor::from(RotorList::I, 'A');
+    }
+
+    #[test]
+    fn construct_ii() {
+        Rotor::from(RotorList::II, 'A');
+    }
+
+    #[test]
+    fn construct_iii() {
+        Rotor::from(RotorList::III, 'A');
+    }
+
+    #[test]
+    fn construct_iv() {
+        Rotor::from(RotorList::IV, 'A');
+    }
+
+    #[test]
+    fn construct_v() {
+        Rotor::from(RotorList::V, 'A');
+    }
+
+    #[test]
+    fn construct_vi() {
+        Rotor::from(RotorList::VI, 'A');
+    }
+
+    #[test]
+    fn construct_vii() {
+        Rotor::from(RotorList::VII, 'A');
+    }
+
+    #[test]
+    fn construct_viii() {
+        Rotor::from(RotorList::VIII, 'A');
+    }
+
+    #[test]
+    fn construct_debug() {
+        Rotor::from(RotorList::DEBUG, 'A');
+    }
 }

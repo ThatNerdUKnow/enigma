@@ -87,4 +87,23 @@ mod tests {
     }
 
     // TODO: Make sure to test that each type of reflector constructs properly
+    #[test]
+    fn construct_a(){
+        Reflector::from(ReflectorList::A);
+    }
+
+    #[test]
+    fn construct_b(){
+        Reflector::from(ReflectorList::B);
+    }
+
+    #[test]
+    fn construct_c(){
+        Reflector::from(ReflectorList::C);
+    }
+
+    #[test]
+    fn construct_debug(){
+        Reflector::from(ReflectorList::DEBUG);
+    }
 }
