@@ -1,25 +1,49 @@
 #![allow(dead_code)]
 
+use prae::Wrapper;
+use itertools::Itertools;
 pub struct Reflector {
-    cipher: &'static str,
+    //cipher: &'static str,
+    cipher: ReflectorCipher,
+}
+
+prae::define! {
+    #[derive(Debug)]
+    pub ReflectorCipher: &'static str;
+    ensure |cipher| {
+        let length_condition = cipher.len() == 26;
+
+        let unique_condition = cipher.chars().unique().count() == 26;
+
+        let reflect_condition = cipher.chars().enumerate().all(|(i,c)|{
+            const OFFSET:u8 = b'A';
+            let index = c as u8 - OFFSET;
+            let char_at_index = cipher.chars().nth(index as usize).unwrap();
+            let reverse_index = char_at_index as u8 - OFFSET;
+            reverse_index == i as u8
+        });
+
+        length_condition && reflect_condition && unique_condition
+     };
 }
 
 /// Struct used in the implementation of the rotor mechanism
 impl Reflector {
-
     /// Generates a new reflector given a cipher
     /// The cipher must be reflective so that each substitution also works backwards
     fn new(cipher: &'static str) -> Reflector {
-        Reflector { cipher }
+        Reflector {
+            cipher: ReflectorCipher::new(cipher).unwrap(),
+        }
     }
 
     /// Returns a pre-generated reflector given a member of the `ReflectorList` enum
-    pub fn from(reflector: ReflectorList) -> Reflector{
-        match reflector{
+    pub fn from(reflector: ReflectorList) -> Reflector {
+        match reflector {
             ReflectorList::A => Reflector::new("EJMZALYXVBWFCRQUONTSPIKHGD"),
             ReflectorList::B => Reflector::new("YRUHQSLDPXNGOKMIEBFZCWVJAT"),
             ReflectorList::C => Reflector::new("FVPJIAOYEDRZXWGCTKUQSBNMHL"),
-            ReflectorList::DEBUG => Reflector::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+            ReflectorList::DEBUG => Reflector::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
         }
     }
 
@@ -29,7 +53,7 @@ impl Reflector {
     pub fn encode(&self, c: char) -> char {
         const OFFSET: u8 = b'A';
         let index = c as u8 - OFFSET;
-        self.cipher.chars().nth(index as usize).unwrap()
+        self.cipher.get().chars().nth(index as usize).unwrap()
     }
 }
 
@@ -37,11 +61,11 @@ impl Reflector {
 /// Each reflector is a substitution cipher where the substitutions are reflective. For example, if a reflector
 /// substitutes `A` with `Z` it also substitutes `Z` with `A`.  
 /// The reflector does not move
-pub enum ReflectorList{
+pub enum ReflectorList {
     A,
     B,
     C,
-    DEBUG
+    DEBUG,
 }
 
 #[cfg(test)]
@@ -62,4 +86,6 @@ mod tests {
             assert_eq!(c, plaintext);
         })
     }
+
+    // TODO: Make sure to test that each type of reflector constructs properly
 }
