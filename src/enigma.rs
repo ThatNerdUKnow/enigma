@@ -160,4 +160,21 @@ mod tests {
             assert_eq!(x as char,rev2);
         })
     }
+
+    #[test]
+    fn rotor_config_size_bound(){
+        println!("Will pass if given a RotorConfig which is either too big or too small");
+        RotorConfig::new(vec![]).unwrap_err();
+    }
+
+    #[test]
+    fn rotor_config_duplicate_bound(){
+        println!("Will pass if given a RotorConfig which contains non-unique rotors");
+        let rotor_config = vec![
+            Rotor::from(RotorList::V, 'X'),
+            Rotor::from(RotorList::V,'N'),
+            Rotor::from(RotorList::VIII,'J')
+        ];
+        RotorConfig::new(rotor_config).unwrap_err();
+    }
 }
