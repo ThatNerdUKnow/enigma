@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use std::fmt::{self};
 use itertools::Itertools;
 use prae::Wrapper;
 
@@ -26,12 +27,21 @@ pub struct Rotor {
 prae::define! {
     #[derive(Debug)]
     pub RotorCipher: &'static str;
-    ensure |cipher|{
-        let length_condition = cipher.len() == 26;
+    validate(CipherError) |cipher|{
 
-        let unique_condition = cipher.chars().unique().count() == 26;
+        
 
-        let mapping_condition = cipher.
+        match cipher.len(){
+            26 => (),
+            _ => return Err(CipherError::Length)
+        };
+
+        match cipher.chars().unique().count() {
+            26 => (),
+            _=> return Err(CipherError::Unique)
+        };
+        
+        let mapping = cipher.
         chars()
         .map(|c|{
             const OFFSET: u8 = b'A';
@@ -41,10 +51,21 @@ prae::define! {
             .nth(c as usize)
             .unwrap()
         })
-        .unique()
-        .count() == 26;
+        .unique();
 
-        length_condition && unique_condition && mapping_condition
+        match mapping.count(){
+            26 => (),
+            _ => return Err(CipherError::Mapping)
+        };
+
+        let charset = cipher.chars().all(|c| c >= 'A' && c <= 'Z');
+
+        match charset{
+            true => (),
+            false => return Err(CipherError::Charset)
+        }
+
+        Ok(())
     };
 }
 
@@ -55,6 +76,7 @@ impl Rotor {
     /// The `position` param must only be a char between `A-Z`
     fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
         // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
+        
         Rotor {
             cipher: RotorCipher::new(cipher).unwrap(),
             notch,
@@ -138,6 +160,26 @@ impl Rotor {
     }
 }
 
+#[derive(Debug)]
+pub enum CipherError{
+    Length,
+    Unique,
+    Mapping,
+    Charset
+}
+
+impl fmt::Display for CipherError{
+    fn fmt(&self, f:&mut fmt::Formatter)-> fmt::Result {
+        match self{
+            CipherError::Length => write!(f,"The given cipher must be exactly 26 characters").unwrap(),
+            CipherError::Unique => write!(f,"Each character in the cipher may only appear once").unwrap(),
+            CipherError::Mapping => write!(f,"Cipher encodes must be reversible. If A maps to Z, Z must also map to A").unwrap(),
+            CipherError::Charset => write!(f,"Cipher may only include characters A-Z inclusive").unwrap()
+        };
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -161,7 +203,6 @@ mod tests {
     fn rotation() {
         let mut current_rotor = Rotor::from(RotorList::I, 'A');
         (0..=200).into_iter().for_each(|_| {
-            const OFFSET: u8 = b'A';
             let inputchar = current_rotor.position;
 
             let new_position = current_rotor.rotate();
