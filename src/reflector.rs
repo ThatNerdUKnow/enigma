@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::fmt::{write, self};
+
 use prae::Wrapper;
 use itertools::Itertools;
 pub struct Reflector {
@@ -9,10 +11,17 @@ pub struct Reflector {
 prae::define! {
     #[derive(Debug)]
     pub ReflectorCipher: &'static str;
-    ensure |cipher| {
-        let length_condition = cipher.len() == 26;
+    validate(CipherError) |cipher| {
 
-        let unique_condition = cipher.chars().unique().count() == 26;
+        match cipher.len(){
+            26 => (),
+            _ => return Err(CipherError::Length)
+        };
+
+        match cipher.chars().unique().count() {
+            26 => (),
+            _ => return Err(CipherError::Unique)
+        }
 
         let reflect_condition = cipher.chars().enumerate().all(|(i,c)|{
             const OFFSET:u8 = b'A';
@@ -22,8 +31,38 @@ prae::define! {
             reverse_index == i as u8
         });
 
-        length_condition && reflect_condition && unique_condition
+        match reflect_condition{
+            true => (),
+            false => return Err(CipherError::Reflect)
+        }
+
+        let charset = cipher.chars().all(|c|c>='A' && c<='Z');
+
+        match charset{
+            true => (),
+            false => return Err(CipherError::Charset)
+        }
+        
+        Ok(())
      };
+}
+
+pub enum CipherError{
+    Length,
+    Unique,
+    Reflect,
+    Charset
+}
+
+impl fmt::Debug for CipherError{
+    fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result{
+        match self{
+            CipherError::Length => write!(f,"The given cipher must be exactly 26 characters"),
+            CipherError::Unique => write!(f,"The given cipher must only contain unique characters"),
+            CipherError::Reflect => write!(f,"The given cipher must be reflective, E.g. If A character is encoded twice, then the original character must be returned"),
+            CipherError::Charset => write!(f, "The given cipher must only contain chars A-Z")
+        }
+    }
 }
 
 /// Struct used in the implementation of the rotor mechanism

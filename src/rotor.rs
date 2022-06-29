@@ -160,7 +160,6 @@ impl Rotor {
     }
 }
 
-#[derive(Debug)]
 pub enum CipherError{
     Length,
     Unique,
@@ -168,7 +167,7 @@ pub enum CipherError{
     Charset
 }
 
-impl fmt::Display for CipherError{
+impl fmt::Debug for CipherError{
     fn fmt(&self, f:&mut fmt::Formatter)-> fmt::Result {
         match self{
             CipherError::Length => write!(f,"The given cipher must be exactly 26 characters").unwrap(),
