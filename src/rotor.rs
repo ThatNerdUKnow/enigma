@@ -1,7 +1,8 @@
 #![allow(dead_code)]
-use std::fmt::{self};
+
 use itertools::Itertools;
 use prae::Wrapper;
+use std::{fmt, hash};
 
 /// This enum represents each available rotor on the enigma machine plus an extra rotor used for debug purposes.
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
@@ -18,6 +19,7 @@ pub enum RotorList {
 }
 
 /// Struct used in the implementation of the rotor mechanism
+#[derive(Debug,Eq)]
 pub struct Rotor {
     cipher: RotorCipher,
     notch: &'static [char],
@@ -25,11 +27,11 @@ pub struct Rotor {
 }
 
 prae::define! {
-    #[derive(Debug)]
+    #[derive(Debug,Hash,Eq,PartialEq)]
     pub RotorCipher: &'static str;
     validate(CipherError) |cipher|{
 
-        
+
 
         match cipher.len(){
             26 => (),
@@ -40,7 +42,7 @@ prae::define! {
             26 => (),
             _=> return Err(CipherError::Unique)
         };
-        
+
         let mapping = cipher.
         chars()
         .map(|c|{
@@ -76,7 +78,7 @@ impl Rotor {
     /// The `position` param must only be a char between `A-Z`
     fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
         // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
-        
+
         Rotor {
             cipher: RotorCipher::new(cipher).unwrap(),
             notch,
@@ -160,20 +162,52 @@ impl Rotor {
     }
 }
 
-pub enum CipherError{
+impl PartialEq for Rotor {
+    fn eq(&self, other: &Self) -> bool {
+        self.cipher.get() == other.cipher.get()
+            && self.notch == other.notch
+            //&& self.position == other.position
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        self.cipher.get() != other.cipher.get()
+            && self.notch != other.notch
+            //&& self.position != other.position
+    }
+}
+
+//impl Eq for Rotor {}
+
+impl hash::Hash for Rotor{
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.cipher.hash(state);
+        self.notch.hash(state);
+    }
+}
+pub enum CipherError {
     Length,
     Unique,
     Mapping,
-    Charset
+    Charset,
 }
 
-impl fmt::Debug for CipherError{
-    fn fmt(&self, f:&mut fmt::Formatter)-> fmt::Result {
-        match self{
-            CipherError::Length => write!(f,"The given cipher must be exactly 26 characters").unwrap(),
-            CipherError::Unique => write!(f,"Each character in the cipher may only appear once").unwrap(),
-            CipherError::Mapping => write!(f,"Cipher encodes must be reversible. If A maps to Z, Z must also map to A").unwrap(),
-            CipherError::Charset => write!(f,"Cipher may only include characters A-Z inclusive").unwrap()
+impl fmt::Debug for CipherError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CipherError::Length => {
+                write!(f, "The given cipher must be exactly 26 characters").unwrap()
+            }
+            CipherError::Unique => {
+                write!(f, "Each character in the cipher may only appear once").unwrap()
+            }
+            CipherError::Mapping => write!(
+                f,
+                "Cipher encodes must be reversible. If A maps to Z, Z must also map to A"
+            )
+            .unwrap(),
+            CipherError::Charset => {
+                write!(f, "Cipher may only include characters A-Z inclusive").unwrap()
+            }
         };
         Ok(())
     }
@@ -181,6 +215,9 @@ impl fmt::Debug for CipherError{
 
 #[cfg(test)]
 mod tests {
+
+    use std::{collections::hash_map::DefaultHasher, hash::{Hash, Hasher}};
+
     use super::*;
 
     #[test]
@@ -278,5 +315,33 @@ mod tests {
     #[test]
     fn construct_debug() {
         Rotor::from(RotorList::DEBUG, 'A');
+    }
+
+    #[test]
+    fn equality(){
+        let r1 = Rotor::from(RotorList::I, 'Z');
+        let r2 = Rotor::from(RotorList::I, 'A');
+        let r3 = Rotor::from(RotorList::II, 'A');
+
+        assert_eq!(r1,r2);
+        assert_ne!(r1,r3);
+    }
+
+    #[test]
+    fn hashing(){
+        let mut hasher1 = DefaultHasher::new();
+        Rotor::from(RotorList::I,'Z').hash(&mut hasher1);
+        let hash1: u64 = hasher1.finish();
+
+        let mut hasher2 = DefaultHasher::new();
+        Rotor::from(RotorList::I,'Z').hash(&mut hasher2);
+        let hash2: u64 = hasher2.finish();
+
+        let mut hasher3 = DefaultHasher::new();
+        Rotor::from(RotorList::II,'Z').hash(&mut hasher3);
+        let hash3: u64 = hasher3.finish();
+
+        assert_eq!(hash1,hash2);
+        assert_ne!(hash1,hash3);
     }
 }

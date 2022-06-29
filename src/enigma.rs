@@ -1,16 +1,77 @@
+use std::fmt;
+
 use crate::reflector::Reflector;
 use crate::rotor::Rotor;
+use itertools::Itertools;
+use prae::Wrapper;
 
 pub struct Enigma {
     reflector: Reflector,
-    rotors: Vec<Rotor>,
+    rotors: RotorConfig,
+}
+
+prae::define! {
+    #[derive(Debug)]
+    RotorConfig: Vec<Rotor>;
+    validate(RotorConfigError) |config|{
+
+        println!("{}",config.iter().unique().count());
+
+        match config.len(){
+            3..=4 => (),
+            _ => return Err(RotorConfigError::Size)
+        }
+
+        match config.iter().unique().count(){
+            3..=4 =>(),
+            _ => return Err(RotorConfigError::Duplicate)
+        }
+
+        Ok(())
+    };
+}
+
+impl RotorConfig{
+    fn advance_rotors(&mut self)
+    {
+        self.0[0].rotate();
+
+        let mut iterhandle = self.0.iter_mut().peekable();
+
+        while let Some(el) = iterhandle.next() {
+            match iterhandle.peek_mut() {
+                Some(next_rotor) => match el.should_advance_next() {
+                    true => {
+                        next_rotor.rotate();
+                    }
+                    false => (),
+                },
+                None => (),
+            }
+        }
+    }
+
+}
+
+pub enum RotorConfigError{
+    Duplicate,
+    Size
+}
+
+impl fmt::Debug for RotorConfigError{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Duplicate => write!(f, "You may not use duplicate rotors"),
+            Self::Size => write!(f, "You may insert no more than 4 rotors and no less than 3 rotors"),
+        }
+    }
 }
 
 impl Enigma {
 
     /// Returns a new Enigma instance
     pub fn new(rotors: Vec<Rotor>, reflector: Reflector) -> Enigma {
-        Enigma { rotors, reflector }
+        Enigma { rotors:RotorConfig::new(rotors).unwrap(), reflector }
     }
 
     /// Encodes an entire string. Note that the only allowed characters are `A-Z` inclusive
@@ -34,6 +95,7 @@ impl Enigma {
     /// This is the first encoding pass of the rotor mechanism
     fn rotor_encode(&mut self, c: char) -> char {
         self.rotors
+            .get()
             .iter()
             .fold(c, |acc, current_rotor| current_rotor.encode(acc))
     }
@@ -47,6 +109,7 @@ impl Enigma {
     /// This property allows the enigma machine to be used as both an encoder and decoder
     fn rotor_decode(&mut self, c: char) -> char {
         self.rotors
+            .get()
             .iter()
             .rev()
             .fold(c, |acc, current_rotor| current_rotor.decode(acc))
@@ -54,21 +117,7 @@ impl Enigma {
 
     /// Advances the first rotor and then checks if subsequent rotors would rotate along
     fn advance_rotors(&mut self) {
-        self.rotors[0].rotate();
-
-        let mut iterhandle = self.rotors.iter_mut().peekable();
-
-        while let Some(el) = iterhandle.next() {
-            match iterhandle.peek_mut() {
-                Some(next_rotor) => match el.should_advance_next() {
-                    true => {
-                        next_rotor.rotate();
-                    }
-                    false => (),
-                },
-                None => (),
-            }
-        }
+        self.rotors.advance_rotors()
     }
 }
 
@@ -81,7 +130,7 @@ mod tests {
     #[test]
     fn rotor_identity() {
         let rotor_config = vec![
-            Rotor::from(RotorList::I, 'X'),
+            Rotor::from(RotorList::IV, 'X'),
             Rotor::from(RotorList::V,'N'),
             Rotor::from(RotorList::VIII,'J')
         ];

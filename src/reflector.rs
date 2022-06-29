@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
-use std::fmt::{write, self};
-
+use std::fmt;
 use prae::Wrapper;
 use itertools::Itertools;
 pub struct Reflector {
