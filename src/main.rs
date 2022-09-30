@@ -1,4 +1,5 @@
 mod common;
+mod cipher;
 
 use common::Character;
 

@@ -1,6 +1,6 @@
-use std::ops::Add;
+use std::{ops::Add, str::FromStr, collections::HashSet};
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq, Eq,Hash,Clone, Copy)]
 pub struct Character(char);
 pub struct Position(u8);
 
@@ -40,4 +40,13 @@ impl Position{
     pub fn advance(mut self){
         self = self + 1_u8;
     }
+}
+
+
+pub trait Encode{
+    fn encode(self,c:Character)->Character;
+}
+
+pub trait Decode{
+    fn decode(self,c:Character)->Character;
 }
