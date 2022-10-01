@@ -42,6 +42,11 @@ impl Position{
     }
 }
 
+impl Character{
+    pub fn get_offset(&self)->u8{
+        self.0 as u8 - b'A'
+    }
+}
 
 pub trait Encode{
     fn encode(self,c:Character)->Character;
