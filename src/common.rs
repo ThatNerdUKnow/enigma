@@ -36,6 +36,15 @@ impl Add<u8> for Position {
     }
 }
 
+impl Add<Position> for Character{
+    type Output = Character;
+
+    fn add(self,rhs:Position)->Self::Output{
+        let offset:u8 = (rhs.0 + self.get_offset()) % 26 + b'A';
+        Character::try_from(offset as char).unwrap()
+    }
+}
+
 impl Position{
     pub fn advance(&mut self){
         self.0 =  self.0 + 1_u8
