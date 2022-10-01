@@ -37,8 +37,8 @@ impl Add<u8> for Position {
 }
 
 impl Position{
-    pub fn advance(mut self){
-        self = self + 1_u8;
+    pub fn advance(&mut self){
+        self.0 =  self.0 + 1_u8
     }
 }
 
