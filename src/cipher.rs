@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::common::Character;
 use std::{collections::HashSet, str::FromStr};
 
@@ -20,25 +22,45 @@ impl FromStr for Cipher {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut cipher: Cipher = Cipher::new();
-        let mut set: HashSet<Character> = HashSet::new();
-        s.chars()
-            .into_iter()
-            .map(|c| Character::try_from(c))
-            .for_each(|c| {
-                match c {
-                    Ok(value) => {
-                        set.insert(value);
-                        cipher.0.push(value)
-                    }
-                    Err(e) => panic!("{:?}", e),
-                };
-            });
+        //let mut cipher: Cipher = Cipher::new();
+        //let mut set: HashSet<Character> = HashSet::new();
+        /*s.chars()
+        .into_iter()
+        .map(|c| Character::try_from(c))
+        .for_each(|c| {
+            match c {
+                Ok(value) => {
+                    set.insert(value);
+                    cipher.0.push(value)
+                }
+                Err(e) => panic!("{:?}", e),
+            };
+        });*/
 
-        match set.len(){
+        let res = s
+            .chars()
+            .into_iter()
+            .unique()
+            .map(|c| Character::try_from(c))
+            .fold(
+                Ok(Cipher::new()),
+                |acc: Result<Cipher, Self::Err>, c| match (acc, c) {
+                    (Ok(mut cipher), Ok(c)) => {
+                        cipher.0.push(c);
+                        Ok(cipher)
+                    }
+                    _ => Err("An invalid character was included in the cipher string"),
+                },
+            );
+
+        match (res,s.len()) {
+            (Ok(cipher),26) => match cipher.0.len() {
                 26 => Ok(cipher),
-                _ => Err("Parsing error: cipher does not contain enough characters(26) Is a character duplicated in the cipher?")
-            }
+                _ => Err("Parsing error: cipher does not contain enough unique characters(26) Is a character duplicated in the cipher?")
+            },
+            (Err(e),_) => Err(e),
+            _=> Err("Too many characters were provided as cipher string")
+        }
     }
 }
 
@@ -118,5 +140,43 @@ mod tests_cipher {
 
                 assert!(*cmp == r)
             })
+    }
+
+    #[test]
+    fn length_too_small() {
+        match Cipher::from_str("AZ") {
+            Ok(_) => {
+                panic!("Should not be able to construct cipher less than 26 chacaters in length")
+            }
+            Err(_) => (),
+        }
+    }
+
+    #[test]
+    fn length_too_big() {
+        match Cipher::from_str("ZYXWVUTSRQPONMLKJIHGFEDCBAA") {
+            Ok(_) => {
+                panic!("Should not be able to construct cipher greater than 26 chacaters in length")
+            }
+            Err(_) => (),
+        }
+    }
+
+    #[test]
+    fn no_duplicates() {
+        match Cipher::from_str("AAAAAAAAAAAAAAAAAAAAAAAAAA") {
+            Ok(_) => panic!("Cipher should contain unique characters"),
+            Err(_) => (),
+        }
+    }
+
+    #[test]
+    fn only_alphabetics() {
+        match Cipher::from_str("1234567890*+-;'!@#$%^&*()_") {
+            Ok(_) => {
+                panic!("Should not be able to construct cipher with non-alphabetic characters")
+            }
+            Err(_) => (),
+        }
     }
 }
