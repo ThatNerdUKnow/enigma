@@ -1,9 +1,12 @@
-use std::{ops::Add, fmt::{Display, Formatter}};
+use std::{
+    fmt::{Display, Formatter},
+    ops::Add,
+};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
 
-#[derive(PartialEq, Eq,Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Position(u8);
 
 impl TryFrom<char> for Character {
@@ -26,6 +29,16 @@ impl TryFrom<u8> for Position {
             0..=25 => Ok(Position(value)),
             _ => Err("Parsing error: only valid positions are 0..=25"),
         }
+    }
+}
+
+impl TryFrom<char> for Position {
+    type Error = &'static str;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        let v = value.to_ascii_uppercase();
+        let offset = v as u8 - b'A';
+        Position::try_from(offset)
     }
 }
 
@@ -59,11 +72,13 @@ impl Character {
     }
 }
 
-impl Display for Character{
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> { write!(f, "{}", self.0) }
+impl Display for Character {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}", self.0)
+    }
 }
 
-impl Into<char> for Character{
+impl Into<char> for Character {
     fn into(self) -> char {
         self.0
     }
@@ -101,23 +116,23 @@ mod tests_character {
                     .for_each(|n| {
                         // Add<Position> for Character calls .unwrap() on the returned type
                         // Meaning that any invalid values should be caught
-                        let _ = c + n; 
+                        let _ = c + n;
                     })
             })
     }
 
     #[test]
-    fn ca_pz_spot_test(){
+    fn ca_pz_spot_test() {
         let p = Position(25);
         let c = Character('A');
-        assert!(c+p == Character('Z'))
+        assert!(c + p == Character('Z'))
     }
 
     #[test]
-    fn cb_pz_bound_wrap(){
+    fn cb_pz_bound_wrap() {
         let p = Position(25);
         let c = Character('B');
-        assert!(c+p == Character('A'))
+        assert!(c + p == Character('A'))
     }
 }
 
