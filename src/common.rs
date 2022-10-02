@@ -1,7 +1,9 @@
-use std::{ops::Add, str::FromStr, collections::HashSet};
+use std::{ops::Add, fmt::{Display, Formatter}};
 
-#[derive(Debug,PartialEq, Eq,Hash,Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
+
+#[derive(PartialEq, Eq,Clone, Copy)]
 pub struct Position(u8);
 
 impl TryFrom<char> for Character {
@@ -36,31 +38,114 @@ impl Add<u8> for Position {
     }
 }
 
-impl Add<Position> for Character{
+impl Add<Position> for Character {
     type Output = Character;
 
-    fn add(self,rhs:Position)->Self::Output{
-        let offset:u8 = (rhs.0 + self.get_offset()) % 26 + b'A';
+    fn add(self, rhs: Position) -> Self::Output {
+        let offset: u8 = (rhs.0 + self.get_offset()) % 26 + b'A';
         Character::try_from(offset as char).unwrap()
     }
 }
 
-impl Position{
-    pub fn advance(&mut self){
-        self.0 =  self.0 + 1_u8
+impl Position {
+    pub fn advance(&mut self) {
+        self.0 = self.0 + 1_u8
     }
 }
 
-impl Character{
-    pub fn get_offset(&self)->u8{
+impl Character {
+    pub fn get_offset(&self) -> u8 {
         self.0 as u8 - b'A'
     }
 }
 
-pub trait Encode{
-    fn encode(self,c:Character)->Character;
+impl Display for Character{
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> { write!(f, "{}", self.0) }
 }
 
-pub trait Decode{
-    fn decode(self,c:Character)->Character;
+impl Into<char> for Character{
+    fn into(self) -> char {
+        self.0
+    }
+}
+
+#[cfg(test)]
+mod tests_character {
+
+    use super::Character;
+    use super::Position;
+
+    #[test]
+    fn construct_uppercase() {
+        ('A'..='Z').into_iter().for_each(|c| {
+            Character::try_from(c).unwrap();
+        })
+    }
+
+    #[test]
+    fn construct_lowercase() {
+        ('a'..='z').into_iter().for_each(|c| {
+            Character::try_from(c).unwrap();
+        })
+    }
+
+    #[test]
+    fn add_position() {
+        ('A'..='Z')
+            .into_iter()
+            .map(|c| Character::try_from(c).unwrap())
+            .for_each(|c| {
+                (0..25)
+                    .into_iter()
+                    .map(|n| Position::try_from(n).unwrap())
+                    .for_each(|n| {
+                        // Add<Position> for Character calls .unwrap() on the returned type
+                        // Meaning that any invalid values should be caught
+                        let _ = c + n; 
+                    })
+            })
+    }
+
+    #[test]
+    fn ca_pz_spot_test(){
+        let p = Position(25);
+        let c = Character('A');
+        assert!(c+p == Character('Z'))
+    }
+
+    #[test]
+    fn cb_pz_bound_wrap(){
+        let p = Position(25);
+        let c = Character('B');
+        assert!(c+p == Character('A'))
+    }
+}
+
+#[cfg(test)]
+mod tests_position {
+
+    use super::Position;
+
+    #[test]
+    fn construct_0_25() {
+        (0..=25).into_iter().for_each(|n| {
+            Position::try_from(n).unwrap();
+        })
+    }
+
+    #[test]
+    fn add() {
+        (0..25).into_iter().for_each(|n| {
+            let p = Position(n);
+            let r = p + 1;
+            assert!(r == Position(n + 1))
+        })
+    }
+
+    #[test]
+    fn add_wrap() {
+        let p = Position::try_from(25).unwrap();
+        let r = p + 1;
+        assert!(r == Position(0))
+    }
 }
