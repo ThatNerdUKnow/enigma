@@ -47,6 +47,14 @@ impl Rotor {
             notches: notches,
         }
     }
+
+    fn advance(&mut self) {
+        self.position.advance()
+    }
+
+    fn get_notches(self) -> Notches {
+        self.notches
+    }
 }
 
 struct Notches(Vec<Position>);
@@ -77,6 +85,11 @@ impl Decode for Rotor {
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        cipher::{Decode, Encode},
+        common::{Character, Position},
+    };
+
     use super::{Rotor, Rotors};
 
     #[test]
@@ -124,5 +137,19 @@ mod tests {
         ('A'..='Z').into_iter().for_each(|c| {
             Rotor::From(Rotors::I, c);
         })
+    }
+
+    #[test]
+    fn codec() {
+        let r = Rotor::From(Rotors::I, 'A');
+        let plaintext = Character::try_from('A').unwrap();
+        let ciphertext = r.encode(plaintext);
+        let res = r.decode(ciphertext);
+
+        println!("plaintext {}", plaintext);
+        println!("ciphertext {}", ciphertext);
+        println!("res {}", res);
+
+        assert_eq!(plaintext, res);
     }
 }

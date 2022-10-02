@@ -6,7 +6,7 @@ use std::{
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Position(u8);
 
 impl TryFrom<char> for Character {
@@ -146,6 +146,14 @@ mod tests_position {
         (0..=25).into_iter().for_each(|n| {
             Position::try_from(n).unwrap();
         })
+    }
+
+    #[test]
+    fn too_large() {
+        match Position::try_from(26) {
+            Ok(_) => panic!("Should not be able to construct position larger than 25"),
+            Err(_) => (),
+        }
     }
 
     #[test]

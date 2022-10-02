@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 use crate::common::Character;
-use std::{collections::HashSet, str::FromStr};
+use std::str::FromStr;
 
 pub trait Encode {
     fn encode(&self, c: Character) -> Character;
