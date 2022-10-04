@@ -3,6 +3,18 @@
 version = 3
 
 [[package]]
+name = "anyhow"
+version = "1.0.65"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98161a4e3e2184da77bb14f02184cdd111e83bbbcc9979dfee3c44b9a85f5602"
+
+[[package]]
+name = "bimap"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc0455254eb5c6964c4545d8bac815e1a1be4f3afe0ae695ea539c12d728d44b"
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12,6 +24,8 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 name = "enigma"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "bimap",
  "itertools",
  "strum",
  "strum_macros",

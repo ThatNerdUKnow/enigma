@@ -1,5 +1,6 @@
 mod cipher;
 mod common;
+mod plugboard;
 mod rotor;
 
 use cipher::{Cipher, Decode, Encode};

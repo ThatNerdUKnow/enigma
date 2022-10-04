@@ -3,6 +3,8 @@ use std::{
     ops::Add,
 };
 
+use anyhow::{anyhow, Error};
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
 
@@ -10,30 +12,30 @@ pub struct Character(char);
 pub struct Position(u8);
 
 impl TryFrom<char> for Character {
-    type Error = &'static str;
+    type Error = Error;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         let value_uppercase = value.to_ascii_uppercase();
         match value_uppercase {
             'A'..='Z' => Ok(Character(value_uppercase)),
-            _ => Err("Parsing error: only valid characters are A-Z"),
+            _ => Err(anyhow!("Parsing error: only valid characters are A-Z")),
         }
     }
 }
 
 impl TryFrom<u8> for Position {
-    type Error = &'static str;
+    type Error = Error;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0..=25 => Ok(Position(value)),
-            _ => Err("Parsing error: only valid positions are 0..=25"),
+            _ => Err(anyhow!("Parsing error: only valid positions are 0..=25")),
         }
     }
 }
 
 impl TryFrom<char> for Position {
-    type Error = &'static str;
+    type Error = Error;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         let v = value.to_ascii_uppercase();

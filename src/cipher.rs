@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Error};
 use itertools::Itertools;
 
 use crate::common::Character;
@@ -19,32 +20,37 @@ impl Cipher {
 }
 
 impl FromStr for Cipher {
-    type Err = &'static str;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = s
+        let res: Vec<Character> = s
             .chars()
             .into_iter()
-            .unique()
             .map(|c| Character::try_from(c))
-            .fold(
-                Ok(Cipher::new()),
-                |acc: Result<Cipher, Self::Err>, c| match (acc, c) {
-                    (Ok(mut cipher), Ok(c)) => {
-                        cipher.0.push(c);
-                        Ok(cipher)
-                    }
-                    _ => Err("An invalid character was included in the cipher string"),
-                },
-            );
+            .try_collect()?;
 
-        match (res,s.len()) {
-            (Ok(cipher),26) => match cipher.0.len() {
-                26 => Ok(cipher),
-                _ => Err("Parsing error: cipher does not contain enough unique characters(26) Is a character duplicated in the cipher?")
-            },
-            (Err(e),_) => Err(e),
-            _=> Err("Too many characters were provided as cipher string")
+        match s.len() {
+            0..=25 => Err(anyhow!(
+                "Too few characters were provided in the cipher string {}",
+                s
+            )),
+            26 => Cipher::try_from(res),
+            _ => Err(anyhow!(
+                "Too many characters were provided in the cipher string {}",
+                s
+            )),
+        }
+    }
+}
+
+impl TryFrom<Vec<Character>> for Cipher {
+    type Error = Error;
+
+    fn try_from(value: Vec<Character>) -> Result<Self, Self::Error> {
+        let res = value.iter().unique().count();
+        match res {
+            26 => Ok(Cipher(value)),
+            _ => Err(anyhow!("Parsing error: Cipher does not contain enough unique characters(26) Is a character duplicated in the cipher?")),
         }
     }
 }
