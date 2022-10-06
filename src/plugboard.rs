@@ -136,11 +136,28 @@ mod tests {
 
     #[test]
     fn reflect() {
-        let v = vec![Plug::try_from((
-            Character::try_from('A').unwrap(),
-            Character::try_from('Z').unwrap(),
-        ))
-        .unwrap()];
+        let v: Vec<Plug> = [
+            ('A', 'B'),
+            ('C', 'Z'),
+            ('X', 'L'),
+            ('N', 'P'),
+            ('Q', 'U'),
+            ('M', 'O'),
+            ('I', 'J'),
+            ('S', 'V'),
+            ('H', 'G'),
+            ('D', 'R'),
+        ]
+        .iter()
+        .map(|x| {
+            (
+                Character::try_from(x.0).unwrap(),
+                Character::try_from(x.1).unwrap(),
+            )
+        })
+        .map(|p| Plug::try_from(p).unwrap())
+        .collect();
+
         let pb = Plugboard::try_from(Plugs::try_from(v).unwrap())
             .expect("Should be able to construct an empty plugboard");
 
