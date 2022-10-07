@@ -2,6 +2,8 @@ use anyhow::{anyhow, Error};
 use itertools::Itertools;
 
 use crate::{
+    cipher::{Decode, Encode},
+    common::Character,
     plugboard::Plugboard,
     reflector::{Reflector, Reflectors},
     rotor::{Rotor, Rotors},
@@ -55,5 +57,46 @@ impl Enigma {
             plugboard: plugboard,
             reflector: reflector,
         }
+    }
+
+    pub fn advance_rotors(&mut self) {
+        let mut iter = self.rotors.0.iter_mut().rev().peekable();
+
+        while let Some(r) = iter.next() {
+            match iter.peek() {
+                Some(next_rotor) => {
+                    if next_rotor.will_advance_next() {
+                        r.advance()
+                    }
+                }
+                None => r.advance(),
+            }
+        }
+    }
+}
+
+impl Encode for Enigma {
+    fn encode(&self, c: Character) -> crate::common::Character {
+        let plugboard_first_pass = self.plugboard.encode(c);
+        let rotors_encode = self
+            .rotors
+            .0
+            .iter()
+            .rev()
+            .fold(plugboard_first_pass, |acc, next| next.encode(acc));
+        let reflector_encode = self.reflector.encode(rotors_encode);
+        let rotors_decode = self
+            .rotors
+            .0
+            .iter()
+            .fold(reflector_encode, |acc, next| next.decode(acc));
+        let plugboard_output = self.plugboard.decode(rotors_decode);
+        plugboard_output
+    }
+}
+
+impl Decode for Enigma {
+    fn decode(&self, c: Character) -> crate::common::Character {
+        self.encode(c)
     }
 }

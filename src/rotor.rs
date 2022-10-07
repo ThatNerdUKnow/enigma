@@ -55,12 +55,16 @@ impl Rotor {
         })
     }
 
-    fn advance(&mut self) {
+    pub fn advance(&mut self) {
         self.position.advance()
     }
 
     fn get_notches(self) -> Notches {
         self.notches
+    }
+
+    pub fn will_advance_next(&self) -> bool {
+        self.notches.0.iter().any(|n| *n == self.position)
     }
 }
 
