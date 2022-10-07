@@ -3,12 +3,14 @@ use crate::{
     common::Character,
 };
 use anyhow::{anyhow, Error, Ok};
+use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 
 pub struct Plugboard {
     cipher: Cipher,
 }
 
+#[derive(Debug)]
 pub struct Plugs(Vec<Plug>);
 
 #[derive(Debug)]
@@ -16,6 +18,7 @@ pub struct Plug(Character, Character);
 
 impl TryFrom<Plugs> for Plugboard {
     fn try_from(value: Plugs) -> Result<Plugboard, self::Error> {
+        // not my best work
         let passthrough = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             .chars()
             .map(|c| Character::try_from(c).unwrap());
@@ -69,7 +72,8 @@ impl TryFrom<Vec<Plug>> for Plugs {
     type Error = Error;
 
     fn try_from(value: Vec<Plug>) -> Result<Self, Self::Error> {
-        match value.len() {
+        let len = value.len();
+        match len {
             0..=10 => (),
             _ => {
                 return Err(anyhow!(
@@ -77,15 +81,21 @@ impl TryFrom<Vec<Plug>> for Plugs {
                 ))
             }
         }
-        let set: HashSet<Character> = HashSet::new();
-        let _plugs = value.iter().try_fold(&value, |acc, p| {
-            match (set.contains(&p.0), set.contains(&p.1)) {
-                (false, false) => Ok(acc),
-                _ => Err(anyhow!(
-                    "The same character can not be used for multiple plugs concurrently"
-                )),
-            }
-        })?;
+
+        let uniquechars = value
+            .iter()
+            .fold(Vec::new(), |mut acc: Vec<Character>, next| {
+                acc.push(next.0);
+                acc.push(next.1);
+                acc
+            })
+            .iter()
+            .unique()
+            .count();
+
+        if uniquechars != 2 * len {
+            return Err(anyhow!("Can not map multiple plugs to the same character"));
+        }
 
         Ok(Plugs(value))
     }
@@ -207,6 +217,21 @@ mod tests {
             Ok(_) => {
                 panic!("Should not be able to construct a plug containing duplicate characters")
             }
+            Err(_) => (),
+        }
+    }
+
+    #[test]
+    fn duplicate_mapping() {
+        let a = Character::try_from('A').unwrap();
+        let b = Character::try_from('B').unwrap();
+        let c = Character::try_from('C').unwrap();
+
+        let p1 = Plug::try_from((a, b)).unwrap();
+        let p2 = Plug::try_from((a, c)).unwrap();
+
+        match Plugs::try_from(vec![p1, p2]) {
+            Ok(plugs) => panic!("Recieved {plugs:?}: Should not be able to construct plugs that contain non-unique mappings"),
             Err(_) => (),
         }
     }
