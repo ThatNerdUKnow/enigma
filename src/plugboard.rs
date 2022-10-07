@@ -1,14 +1,9 @@
-use bimap::BiMap;
-
 use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Character,
 };
 use anyhow::{anyhow, Error, Ok};
-use std::{
-    collections::{HashMap, HashSet},
-    fmt,
-};
+use std::collections::{HashMap, HashSet};
 
 pub struct Plugboard {
     cipher: Cipher,

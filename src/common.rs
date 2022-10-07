@@ -8,7 +8,7 @@ use anyhow::{anyhow, Error};
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub struct Position(u8);
 
 impl TryFrom<char> for Character {

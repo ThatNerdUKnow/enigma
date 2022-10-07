@@ -1,15 +1,15 @@
 use std::str::FromStr;
 
 use crate::{
-    cipher::{Cipher, Decode, Encode},
+    cipher::{Cipher, Encode},
     common::Character,
 };
 
-struct Reflector {
+pub struct Reflector {
     cipher: Cipher,
 }
 
-enum Reflectors {
+pub enum Reflectors {
     A,
     B,
     C,

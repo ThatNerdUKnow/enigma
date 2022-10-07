@@ -11,6 +11,7 @@ pub trait Encode {
 pub trait Decode {
     fn decode(&self, c: Character) -> Character;
 }
+
 pub struct Cipher(Vec<Character>);
 
 impl Cipher {

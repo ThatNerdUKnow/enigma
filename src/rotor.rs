@@ -1,13 +1,14 @@
-use std::str::FromStr;
+use std::{hash::Hash, str::FromStr};
 
 use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Position,
 };
+use anyhow::Error;
 use strum_macros::EnumString;
 
-#[derive(EnumString)]
-enum Rotors {
+#[derive(EnumString, Hash, PartialEq, Eq, Clone)]
+pub enum Rotors {
     I,
     II,
     III,
@@ -17,14 +18,15 @@ enum Rotors {
     VII,
     VIII,
 }
-struct Rotor {
+pub struct Rotor {
     position: Position,
+    inital_pos: Position,
     cipher: Cipher,
     notches: Notches,
 }
 
 impl Rotor {
-    fn From(r: Rotors, p: char) -> Rotor {
+    pub fn From(r: Rotors, p: char) -> Result<Rotor, Error> {
         match r {
             Rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], p),
             Rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], p),
@@ -37,15 +39,16 @@ impl Rotor {
         }
     }
 
-    fn new(c: &str, n: &[char], p: char) -> Rotor {
+    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Error> {
         let cipher = Cipher::from_str(c).unwrap();
         let notches = n.iter().map(|p| Position::try_from(*p).unwrap()).collect();
-        let position = Position::try_from(p).unwrap();
-        Rotor {
+        let position = Position::try_from(p)?;
+        Ok(Rotor {
             position: position,
             cipher: cipher,
             notches: notches,
-        }
+            inital_pos: position,
+        })
     }
 
     fn advance(&mut self) {
@@ -57,6 +60,7 @@ impl Rotor {
     }
 }
 
+#[derive(Hash)]
 struct Notches(Vec<Position>);
 
 impl FromIterator<Position> for Notches {
@@ -87,61 +91,61 @@ impl Decode for Rotor {
 mod tests {
     use crate::{
         cipher::{Decode, Encode},
-        common::{Character, Position},
+        common::Character,
     };
 
     use super::{Rotor, Rotors};
 
     #[test]
     fn construct_i() {
-        Rotor::From(Rotors::I, 'A');
+        let _ = Rotor::From(Rotors::I, 'A');
     }
 
     #[test]
     fn construct_ii() {
-        Rotor::From(Rotors::II, 'A');
+        let _ = Rotor::From(Rotors::II, 'A');
     }
 
     #[test]
     fn construct_iii() {
-        Rotor::From(Rotors::III, 'A');
+        let _ = Rotor::From(Rotors::III, 'A');
     }
 
     #[test]
     fn construct_iv() {
-        Rotor::From(Rotors::IV, 'A');
+        let _ = Rotor::From(Rotors::IV, 'A');
     }
 
     #[test]
     fn construct_v() {
-        Rotor::From(Rotors::V, 'A');
+        let _ = Rotor::From(Rotors::V, 'A');
     }
 
     #[test]
     fn construct_vi() {
-        Rotor::From(Rotors::VI, 'A');
+        let _ = Rotor::From(Rotors::VI, 'A');
     }
 
     #[test]
     fn construct_vii() {
-        Rotor::From(Rotors::VII, 'A');
+        let _ = Rotor::From(Rotors::VII, 'A');
     }
 
     #[test]
     fn construct_viii() {
-        Rotor::From(Rotors::VIII, 'A');
+        let _ = Rotor::From(Rotors::VIII, 'A');
     }
 
     #[test]
     fn construct_all_positions() {
         ('A'..='Z').into_iter().for_each(|c| {
-            Rotor::From(Rotors::I, c);
+            let _ = Rotor::From(Rotors::I, c);
         })
     }
 
     #[test]
     fn codec() {
-        let r = Rotor::From(Rotors::I, 'A');
+        let r = Rotor::From(Rotors::I, 'A').unwrap();
         let plaintext = Character::try_from('A').unwrap();
         let ciphertext = r.encode(plaintext);
         let res = r.decode(ciphertext);

@@ -1,9 +1,11 @@
 mod cipher;
 mod common;
+mod enigma;
 mod plugboard;
+mod reflector;
 mod rotor;
 
-use cipher::{Cipher, Decode, Encode};
+use cipher::{Cipher, Decode};
 use common::Character;
 use std::str::FromStr;
 
