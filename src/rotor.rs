@@ -66,6 +66,10 @@ impl Rotor {
     pub fn will_advance_next(&self) -> bool {
         self.notches.0.iter().any(|n| *n == self.position)
     }
+
+    pub fn reset(&mut self) {
+        self.position = self.inital_pos;
+    }
 }
 
 #[derive(Hash)]

@@ -73,6 +73,10 @@ impl Enigma {
             }
         }
     }
+
+    fn reset(&mut self) {
+        self.rotors.0.iter_mut().for_each(|r| r.reset())
+    }
 }
 
 impl Encode for Enigma {
