@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Error};
+use thiserror::Error;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
@@ -11,36 +12,47 @@ pub struct Character(char);
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub struct Position(u8);
 
+#[derive(Error, Debug)]
+pub enum ParsingError {
+    #[error("Recieved {0}: Only valid chars are A-Z")]
+    Charset(char),
+    #[error("Recieved {0}: Only valid positions are 0-25")]
+    InvalidPosition(usize),
+}
+
 impl TryFrom<char> for Character {
-    type Error = Error;
+    type Error = ParsingError;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         let value_uppercase = value.to_ascii_uppercase();
         match value_uppercase {
             'A'..='Z' => Ok(Character(value_uppercase)),
-            _ => Err(anyhow!("Parsing error: only valid characters are A-Z")),
+            _ => Err(ParsingError::Charset(value)),
         }
     }
 }
 
 impl TryFrom<u8> for Position {
-    type Error = Error;
+    type Error = ParsingError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0..=25 => Ok(Position(value)),
-            _ => Err(anyhow!("Parsing error: only valid positions are 0..=25")),
+            _ => Err(ParsingError::InvalidPosition(value as usize)),
         }
     }
 }
 
 impl TryFrom<char> for Position {
-    type Error = Error;
+    type Error = ParsingError;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         let v = value.to_ascii_uppercase();
         let offset = v as u8 - b'A';
-        Position::try_from(offset)
+        match Position::try_from(offset) {
+            Ok(p) => Ok(p),
+            Err(_) => Err(ParsingError::Charset(value)),
+        }
     }
 }
 

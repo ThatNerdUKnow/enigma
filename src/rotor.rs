@@ -43,19 +43,6 @@ impl TryFrom<(Rotors, char)> for Rotor {
 }
 
 impl Rotor {
-    /*pub fn From(r: Rotors, p: char) -> Result<Rotor, Error> {
-        match r {
-            Rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], p),
-            Rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], p),
-            Rotors::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], p),
-            Rotors::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], p),
-            Rotors::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], p),
-            Rotors::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], p),
-            Rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], p),
-            Rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], p),
-        }
-    }*/
-
     fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Error> {
         let cipher = Cipher::from_str(c).unwrap();
         let notches = n.iter().map(|p| Position::try_from(*p).unwrap()).collect();
