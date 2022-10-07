@@ -25,9 +25,9 @@ impl Cipher {
 enum CipherError {
     #[error("Cipher does not contain enough unique characters(26) is a character duplicated in the cipher? Recieved")]
     Unique,
-    #[error("")]
+    #[error("Recieved {0}: Cipher may only contain 26 characters")]
     TooMany(usize),
-    #[error("")]
+    #[error("Recieved {0}: Cipher may only contain 26 characters")]
     TooFew(usize),
 }
 
