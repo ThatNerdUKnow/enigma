@@ -1,4 +1,5 @@
-use anyhow::{anyhow, Context, Error};
+use anyhow::Context;
+use bruh_moment::{bruh, Bruh};
 use itertools::Itertools;
 use thiserror::Error;
 
@@ -32,7 +33,7 @@ enum CipherError {
 }
 
 impl FromStr for Cipher {
-    type Err = Error;
+    type Err = Bruh;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res: Vec<Character> = s
@@ -43,21 +44,21 @@ impl FromStr for Cipher {
             .with_context(|| format!("Tried to create a cipher from a string"))?;
 
         match s.len() {
-            0..=25 => Err(anyhow!(CipherError::TooFew(s.len()))),
+            0..=25 => Err(bruh!(CipherError::TooFew(s.len()))),
             26 => Cipher::try_from(res),
-            _ => Err(anyhow!(CipherError::TooMany(s.len()))),
+            _ => Err(bruh!(CipherError::TooMany(s.len()))),
         }
     }
 }
 
 impl TryFrom<Vec<Character>> for Cipher {
-    type Error = Error;
+    type Error = Bruh;
 
     fn try_from(value: Vec<Character>) -> Result<Self, Self::Error> {
         let res = value.iter().unique().count();
         match res {
             26 => Ok(Cipher(value)),
-            _ => Err(anyhow!(CipherError::Unique)),
+            _ => Err(bruh!(CipherError::Unique)),
         }
     }
 }

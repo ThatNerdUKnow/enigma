@@ -4,7 +4,7 @@ use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Position,
 };
-use anyhow::Error;
+use bruh_moment::Bruh;
 use strum_macros::EnumString;
 
 #[derive(EnumString, Hash, PartialEq, Eq, Clone)]
@@ -26,7 +26,7 @@ pub struct Rotor {
 }
 
 impl TryFrom<(Rotors, char)> for Rotor {
-    type Error = Error;
+    type Error = Bruh;
 
     fn try_from((variant, position): (Rotors, char)) -> Result<Self, Self::Error> {
         match variant {
@@ -43,7 +43,7 @@ impl TryFrom<(Rotors, char)> for Rotor {
 }
 
 impl Rotor {
-    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Error> {
+    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Bruh> {
         let cipher = Cipher::from_str(c).unwrap();
         let notches = n.iter().map(|p| Position::try_from(*p).unwrap()).collect();
         let position = Position::try_from(p)?;

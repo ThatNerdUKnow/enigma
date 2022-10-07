@@ -15,6 +15,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc0455254eb5c6964c4545d8bac815e1a1be4f3afe0ae695ea539c12d728d44b"
 
 [[package]]
+name = "bruh_moment"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c544632934065fb7d4642945f3e76f47a9a62c74f42d2b8f3e077648f792484b"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -26,6 +35,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bimap",
+ "bruh_moment",
  "itertools",
  "strum",
  "strum_macros",
