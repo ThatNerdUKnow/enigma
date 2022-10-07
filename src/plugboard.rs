@@ -2,9 +2,10 @@ use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Character,
 };
-use anyhow::{anyhow, Error, Ok};
+use anyhow::Error;
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use thiserror::Error;
 
 pub struct Plugboard {
     cipher: Cipher,
@@ -16,7 +17,18 @@ pub struct Plugs(Vec<Plug>);
 #[derive(Debug)]
 pub struct Plug(Character, Character);
 
+#[derive(Error, Debug)]
+pub enum PlugboardError {
+    #[error("Recieved {0} plugs, No more than 10 plugs may be used in the plugboard")]
+    TooMany(usize),
+    #[error("Can not map multiple plugs to the same character")]
+    Mapping,
+    #[error("Can not map a character to itself")]
+    Duplicate,
+}
+
 impl TryFrom<Plugs> for Plugboard {
+    type Error = Error;
     fn try_from(value: Plugs) -> Result<Plugboard, self::Error> {
         // not my best work
         let passthrough = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -53,33 +65,27 @@ impl TryFrom<Plugs> for Plugboard {
         let cipher: Cipher = Cipher::try_from(x)?;
         Ok(Plugboard { cipher: cipher })
     }
-
-    type Error = Error;
 }
 
 impl TryFrom<(Character, Character)> for Plug {
-    type Error = Error;
+    type Error = PlugboardError;
 
     fn try_from(value: (Character, Character)) -> Result<Self, Self::Error> {
         match value.0 == value.1 {
-            true => Err(anyhow!("Plug can not contain the same character")),
+            true => Err(PlugboardError::Duplicate),
             false => Ok(Plug(value.0, value.1)),
         }
     }
 }
 
 impl TryFrom<Vec<Plug>> for Plugs {
-    type Error = Error;
+    type Error = PlugboardError;
 
     fn try_from(value: Vec<Plug>) -> Result<Self, Self::Error> {
         let len = value.len();
         match len {
             0..=10 => (),
-            _ => {
-                return Err(anyhow!(
-                    "No more than 10 plugs may be used in the plugboard"
-                ))
-            }
+            _ => return Err(PlugboardError::TooMany(value.len())),
         }
 
         let uniquechars = value
@@ -94,7 +100,7 @@ impl TryFrom<Vec<Plug>> for Plugs {
             .count();
 
         if uniquechars != 2 * len {
-            return Err(anyhow!("Can not map multiple plugs to the same character"));
+            return Err(PlugboardError::Mapping);
         }
 
         Ok(Plugs(value))

@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Error};
 use itertools::Itertools;
+use thiserror::Error;
 
 use crate::common::Character;
 use std::str::FromStr;
@@ -20,6 +21,16 @@ impl Cipher {
     }
 }
 
+#[derive(Error, Debug)]
+enum CipherError {
+    #[error("Cipher does not contain enough unique characters(26) is a character duplicated in the cipher? Recieved")]
+    Unique,
+    #[error("")]
+    TooMany(usize),
+    #[error("")]
+    TooFew(usize),
+}
+
 impl FromStr for Cipher {
     type Err = Error;
 
@@ -31,15 +42,9 @@ impl FromStr for Cipher {
             .try_collect()?;
 
         match s.len() {
-            0..=25 => Err(anyhow!(
-                "Too few characters were provided in the cipher string {}",
-                s
-            )),
+            0..=25 => Err(anyhow!(CipherError::TooFew(s.len()))),
             26 => Cipher::try_from(res),
-            _ => Err(anyhow!(
-                "Too many characters were provided in the cipher string {}",
-                s
-            )),
+            _ => Err(anyhow!(CipherError::TooMany(s.len()))),
         }
     }
 }
@@ -51,7 +56,7 @@ impl TryFrom<Vec<Character>> for Cipher {
         let res = value.iter().unique().count();
         match res {
             26 => Ok(Cipher(value)),
-            _ => Err(anyhow!("Parsing error: Cipher does not contain enough unique characters(26) Is a character duplicated in the cipher?")),
+            _ => Err(anyhow!(CipherError::Unique)),
         }
     }
 }
