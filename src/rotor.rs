@@ -25,8 +25,25 @@ pub struct Rotor {
     notches: Notches,
 }
 
+impl TryFrom<(Rotors, char)> for Rotor {
+    type Error = Error;
+
+    fn try_from((variant, position): (Rotors, char)) -> Result<Self, Self::Error> {
+        match variant {
+            Rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
+            Rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
+            Rotors::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
+            Rotors::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
+            Rotors::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
+            Rotors::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
+            Rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
+            Rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
+        }
+    }
+}
+
 impl Rotor {
-    pub fn From(r: Rotors, p: char) -> Result<Rotor, Error> {
+    /*pub fn From(r: Rotors, p: char) -> Result<Rotor, Error> {
         match r {
             Rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], p),
             Rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], p),
@@ -37,7 +54,7 @@ impl Rotor {
             Rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], p),
             Rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], p),
         }
-    }
+    }*/
 
     fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Error> {
         let cipher = Cipher::from_str(c).unwrap();
@@ -98,54 +115,54 @@ mod tests {
 
     #[test]
     fn construct_i() {
-        let _ = Rotor::From(Rotors::I, 'A');
+        let _ = Rotor::try_from((Rotors::I, 'A'));
     }
 
     #[test]
     fn construct_ii() {
-        let _ = Rotor::From(Rotors::II, 'A');
+        let _ = Rotor::try_from((Rotors::II, 'A'));
     }
 
     #[test]
     fn construct_iii() {
-        let _ = Rotor::From(Rotors::III, 'A');
+        let _ = Rotor::try_from((Rotors::III, 'A'));
     }
 
     #[test]
     fn construct_iv() {
-        let _ = Rotor::From(Rotors::IV, 'A');
+        let _ = Rotor::try_from((Rotors::IV, 'A'));
     }
 
     #[test]
     fn construct_v() {
-        let _ = Rotor::From(Rotors::V, 'A');
+        let _ = Rotor::try_from((Rotors::V, 'A'));
     }
 
     #[test]
     fn construct_vi() {
-        let _ = Rotor::From(Rotors::VI, 'A');
+        let _ = Rotor::try_from((Rotors::VI, 'A'));
     }
 
     #[test]
     fn construct_vii() {
-        let _ = Rotor::From(Rotors::VII, 'A');
+        let _ = Rotor::try_from((Rotors::VII, 'A'));
     }
 
     #[test]
     fn construct_viii() {
-        let _ = Rotor::From(Rotors::VIII, 'A');
+        let _ = Rotor::try_from((Rotors::VIII, 'A'));
     }
 
     #[test]
     fn construct_all_positions() {
         ('A'..='Z').into_iter().for_each(|c| {
-            let _ = Rotor::From(Rotors::I, c);
+            let _ = Rotor::try_from((Rotors::I, c));
         })
     }
 
     #[test]
     fn codec() {
-        let r = Rotor::From(Rotors::I, 'A').unwrap();
+        let r = Rotor::try_from((Rotors::I, 'A')).unwrap();
         let plaintext = Character::try_from('A').unwrap();
         let ciphertext = r.encode(plaintext);
         let res = r.decode(ciphertext);

@@ -23,7 +23,7 @@ impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
         let rawcount = iter.clone().count();
         let unique = iter.clone().map(|(r, _)| r).unique().count();
         match (rawcount, unique) {
-            (3, 3) => iter.cloned().map(|(r, c)| Rotor::From(r, c)).try_collect(),
+            (3, 3) => iter.cloned().map(|r| Rotor::try_from(r)).try_collect(),
             (_, 0..=2) => Err(anyhow!(
                 "Duplicate rotors: You may not use the same rotor more than once"
             )),
