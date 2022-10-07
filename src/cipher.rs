@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Error};
+use anyhow::{anyhow, Context, Error};
 use itertools::Itertools;
 use thiserror::Error;
 
@@ -39,7 +39,8 @@ impl FromStr for Cipher {
             .chars()
             .into_iter()
             .map(|c| Character::try_from(c))
-            .try_collect()?;
+            .try_collect()
+            .with_context(|| format!("Tried to create a cipher from a string"))?;
 
         match s.len() {
             0..=25 => Err(anyhow!(CipherError::TooFew(s.len()))),

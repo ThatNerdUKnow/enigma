@@ -2,7 +2,7 @@ use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Character,
 };
-use anyhow::Error;
+use anyhow::{Context, Error};
 use itertools::Itertools;
 use std::collections::HashMap;
 use thiserror::Error;
@@ -62,7 +62,8 @@ impl TryFrom<Plugs> for Plugboard {
             .cloned()
             .collect();
 
-        let cipher: Cipher = Cipher::try_from(x)?;
+        let cipher: Cipher = Cipher::try_from(x)
+            .with_context(|| format!("Tried to construct a cipher for a plugboard"))?;
         Ok(Plugboard { cipher: cipher })
     }
 }
