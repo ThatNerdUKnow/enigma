@@ -9,6 +9,10 @@ pub struct Reflector {
     cipher: Cipher,
 }
 
+/// This enum represents each available reflector on the enigma machine
+/// Each reflector is a substitution cipher where the substitutions are reflective. For example, if a reflector
+/// substitutes `A` with `Z` it also substitutes `Z` with `A`.  
+/// The reflector does not move
 pub enum Reflectors {
     A,
     B,
@@ -23,6 +27,9 @@ impl Reflector {
 }
 
 impl From<Reflectors> for Reflector {
+    /// Generates a new reflector given a cipher
+    /// The cipher must be reflective so that each substitution also works backwards
+    /// Returns a pre-generated reflector given a member of the `Reflectors` enum
     fn from(r: Reflectors) -> Self {
         match r {
             Reflectors::A => Reflector::new("EJMZALYXVBWFCRQUONTSPIKHGD"),
@@ -33,6 +40,9 @@ impl From<Reflectors> for Reflector {
 }
 
 impl Encode for Reflector {
+    /// Encodes a given char through the reflector.
+    /// Given the properties of the reflector, if the output of this function was fed through this function,
+    /// you would get back the original char
     fn encode(&self, c: Character) -> Character {
         self.cipher.encode(c)
     }
