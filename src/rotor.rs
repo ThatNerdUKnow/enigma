@@ -4,7 +4,9 @@ use crate::{
     cipher::{Cipher, Decode, Encode},
     common::Position,
 };
+use anyhow::anyhow;
 use bruh_moment::Bruh;
+use itertools::Itertools;
 use strum_macros::EnumString;
 
 /// This enum represents each available rotor for the real life enigma machine
@@ -26,6 +28,39 @@ pub struct Rotor {
     inital_pos: Position,
     cipher: Cipher,
     notches: Notches,
+}
+
+pub struct RotorConfig(Vec<Rotor>);
+
+impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
+    type Error = Bruh;
+
+    fn try_from(value: [(Rotors, char); 3]) -> Result<Self, Self::Error> {
+        let iter = value.iter();
+        let rawcount = iter.clone().count();
+        let unique = iter.clone().map(|(r, _)| r).unique().count();
+        match (rawcount, unique) {
+            (3, 3) => iter.cloned().map(|r| Rotor::try_from(r)).try_collect(),
+            (_, 0..=2) => Err(anyhow!(
+                "Duplicate rotors: You may not use the same rotor more than once"
+            )),
+            (0..=2, _) => Err(anyhow!("Too few rotors: you must provide 3 rotors")),
+            _ => Err(anyhow!(
+                "Too many rotors: you must provide exactly 3 rotors"
+            )),
+        }
+    }
+}
+
+impl FromIterator<Rotor> for RotorConfig {
+    fn from_iter<T: IntoIterator<Item = Rotor>>(iter: T) -> Self {
+        let num = iter.into_iter().count();
+        match num {
+            0..=2 => panic!("Too few items in iterator to create rotorconfig"),
+            3 => todo!(),
+            _ => panic!("Too many items in iterator to create rotorconfig"),
+        }
+    }
 }
 
 impl TryFrom<(Rotors, char)> for Rotor {
