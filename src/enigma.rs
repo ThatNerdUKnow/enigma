@@ -58,25 +58,6 @@ impl Enigma {
             reflector: reflector,
         }
     }
-
-    pub fn advance_rotors(&mut self) {
-        let mut iter = self.rotors.0.iter_mut().rev().peekable();
-
-        while let Some(r) = iter.next() {
-            match iter.peek() {
-                Some(next_rotor) => {
-                    if next_rotor.will_advance_next() {
-                        r.advance()
-                    }
-                }
-                None => r.advance(),
-            }
-        }
-    }
-
-    fn reset(&mut self) {
-        self.rotors.0.iter_mut().for_each(|r| r.reset())
-    }
 }
 
 impl Encode for Enigma {
