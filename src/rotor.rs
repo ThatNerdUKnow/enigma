@@ -2,7 +2,7 @@ use std::{hash::Hash, str::FromStr};
 
 use crate::{
     cipher::{Cipher, Decode, Encode},
-    common::Position,
+    common::{Character, Position},
 };
 use anyhow::anyhow;
 use bruh_moment::Bruh;
@@ -25,7 +25,6 @@ pub enum Rotors {
 /// Individual rotor used in the rotor mechanism
 pub struct Rotor {
     position: Position,
-    inital_pos: Position,
     cipher: Cipher,
     notches: Notches,
 }
@@ -89,12 +88,42 @@ impl Rotor {
             position: position,
             cipher: cipher,
             notches: notches,
-            inital_pos: position,
         })
     }
 
     fn get_notches(self) -> Notches {
         self.notches
+    }
+
+    fn encode_at(&self, c: Character, n: usize) -> Character {
+        let offset: Position = self.position + n;
+        self.cipher.encode(c + offset)
+    }
+
+    fn decode_at(&self, c: Character, n: usize) -> Character {
+        let offset: Position = self.position + n;
+        self.cipher.decode(c - offset)
+    }
+
+    /// given n revolutions of the current rotor, how many times will the next rotor in the sequence advance?
+    fn get_num_advances(&self, n: usize) -> usize {
+        let r = n / 26;
+        let notches_left = self
+            .notches
+            .0
+            .iter()
+            .filter(|notch| self.position <= **notch)
+            .count();
+
+        let final_position = Position::try_from((n % 26) as u8).unwrap();
+        let notches_past = self
+            .notches
+            .0
+            .iter()
+            .filter(|notch| final_position > **notch)
+            .count();
+
+        (r * self.notches.0.len()) + notches_left + notches_past
     }
 }
 
@@ -111,25 +140,11 @@ impl FromIterator<Position> for Notches {
     }
 }
 
-impl Encode for Rotor {
-    fn encode(&self, c: crate::common::Character) -> crate::common::Character {
-        let p = self.position;
-        self.cipher.encode(c + p)
-    }
-}
-
-impl Decode for Rotor {
-    fn decode(&self, c: crate::common::Character) -> crate::common::Character {
-        let p = self.position;
-        self.cipher.decode(c + p)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::{
         cipher::{Decode, Encode},
-        common::Character,
+        common::{Character, Position},
     };
 
     use super::{Rotor, Rotors};
@@ -183,15 +198,21 @@ mod tests {
 
     #[test]
     fn codec() {
-        let r = Rotor::try_from((Rotors::I, 'A')).unwrap();
-        let plaintext = Character::try_from('A').unwrap();
-        let ciphertext = r.encode(plaintext);
-        let res = r.decode(ciphertext);
+        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
 
-        println!("plaintext {}", plaintext);
-        println!("ciphertext {}", ciphertext);
-        println!("res {}", res);
+        (0..=u8::MAX).into_iter().for_each(|n| {
+            ('A'..='Z')
+                .into_iter()
+                .map(|c| Character::try_from(c).unwrap())
+                .for_each(|plaintext| {
+                    let ciphertext = r.encode_at(plaintext, n.into());
+                    let res = r.decode_at(ciphertext, n.into());
 
-        assert_eq!(plaintext, res);
+                    println!("{n}: {plaintext}-{ciphertext}-{res}");
+                    // fix subtraction code
+
+                    assert_eq!(plaintext, res);
+                });
+        })
     }
 }

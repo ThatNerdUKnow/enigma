@@ -1,6 +1,6 @@
 use std::{
     fmt::{Display, Formatter},
-    ops::Add,
+    ops::{Add, Sub},
 };
 
 use thiserror::Error;
@@ -8,7 +8,7 @@ use thiserror::Error;
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd)]
 pub struct Position(u8);
 
 #[derive(Error, Debug)]
@@ -55,12 +55,32 @@ impl TryFrom<char> for Position {
     }
 }
 
-impl Add<u8> for Position {
+impl Add<usize> for Position {
     type Output = Position;
 
-    fn add(self, rhs: u8) -> Self::Output {
-        let offset = (self.0 + rhs) % 26;
-        Position(offset)
+    fn add(self, rhs: usize) -> Self::Output {
+        let offset = (self.0 as usize + rhs) % 26;
+        Position((offset as usize).try_into().unwrap())
+    }
+}
+
+impl Sub<Position> for Character {
+    type Output = Self;
+
+    fn sub(self, rhs: Position) -> Self::Output {
+        // -25..=-1 if rhs is bigger, otherwise 0..=25
+        let offset: isize = (self.get_offset() as isize - rhs.0 as isize) % 26;
+
+        println!("{self}:{0} {rhs:?} {offset}", self.get_offset());
+        let result = match offset {
+            -25..=-1 => (26 + offset) as u8 + b'A',
+            0..=25 => offset as u8 + b'A',
+            _ => unreachable!(),
+        };
+
+        println!("{}", result as char);
+
+        Character::try_from(result as char).unwrap()
     }
 }
 
