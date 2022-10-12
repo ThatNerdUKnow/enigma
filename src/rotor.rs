@@ -34,6 +34,28 @@ struct Notches(Vec<Position>);
 
 pub struct RotorConfig(Vec<Rotor>);
 
+impl RotorConfig {
+    pub fn encode_at(&self, c: Character, n: usize) -> Character {
+        let encode_first_rotor = self.0[0].encode_at(c, n);
+        let n = self.0[0].get_num_advances(n);
+        let encode_second_rotor = self.0[1].encode_at(encode_first_rotor, n);
+        let n = self.0[1].get_num_advances(n);
+        let encode_third_rotor = self.0[2].encode_at(encode_second_rotor, n);
+        encode_third_rotor
+    }
+
+    pub fn decode_at(&self, c: Character, n: usize) -> Character {
+        let r1_advances = n;
+        let r2_advances = self.0[0].get_num_advances(n);
+        let r3_advances = self.0[1].get_num_advances(r2_advances);
+
+        let decode_third_rotor = self.0[2].decode_at(c, r3_advances);
+        let decode_second_rotor = self.0[1].decode_at(decode_third_rotor, r2_advances);
+        let decode_first_rotor = self.0[0].decode_at(decode_second_rotor, r1_advances);
+        decode_first_rotor
+    }
+}
+
 impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
     type Error = Bruh;
 
@@ -146,11 +168,31 @@ impl FromIterator<Position> for Notches {
 
 #[cfg(test)]
 mod tests {
-    use super::{Rotor, Rotors};
+    use super::{Rotor, RotorConfig, Rotors};
     use crate::{
         cipher::{Decode, Encode},
         common::{Character, Position},
     };
+
+    #[test]
+    fn rotorconfig_codec() {
+        let r = || Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
+
+        let rc = RotorConfig(vec![r(), r(), r()]);
+
+        let a = Character::try_from('A').unwrap();
+
+        let t = |n: usize| {
+            let ct = rc.encode_at(a, n);
+            let pt = rc.decode_at(ct, n);
+            assert_eq!(a, pt)
+        };
+
+        t(1);
+        t(26);
+        t(53);
+        t(1_000_000);
+    }
 
     #[test]
     fn num_advances() {
