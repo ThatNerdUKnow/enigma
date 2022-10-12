@@ -25,4 +25,13 @@ impl Enigma {
             reflector: reflector,
         }
     }
+
+    pub fn encode_at(&self, c: Character, n: usize) -> Character {
+        let plugboard_enc = self.plugboard.encode(c);
+        let rotor_enc = self.rotors.encode_at(plugboard_enc, n);
+        let reflector_enc = self.reflector.encode(rotor_enc);
+        let rotor_dec = self.rotors.decode_at(reflector_enc, n);
+        let plugboard_dec = self.plugboard.decode(rotor_dec);
+        plugboard_dec
+    }
 }
