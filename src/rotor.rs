@@ -29,6 +29,9 @@ pub struct Rotor {
     notches: Notches,
 }
 
+#[derive(Hash, Debug)]
+struct Notches(Vec<Position>);
+
 pub struct RotorConfig(Vec<Rotor>);
 
 impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
@@ -91,10 +94,6 @@ impl Rotor {
         })
     }
 
-    fn get_notches(self) -> Notches {
-        self.notches
-    }
-
     fn encode_at(&self, c: Character, n: usize) -> Character {
         let offset: Position = self.position + n;
         self.cipher.encode(c + offset)
@@ -107,6 +106,7 @@ impl Rotor {
 
     /// given n revolutions of the current rotor, how many times will the next rotor in the sequence advance?
     fn get_num_advances(&self, n: usize) -> usize {
+        println!("{:?} {:?}", self.notches, self.position);
         let r = n / 26;
         let notches_left = self
             .notches
@@ -123,12 +123,16 @@ impl Rotor {
             .filter(|notch| final_position > **notch)
             .count();
 
-        (r * self.notches.0.len()) + notches_left + notches_past
+        let mut result = (r * self.notches.0.len()) + notches_left;
+
+        if r > 0 {
+            result = result + notches_past
+        }
+
+        println!("{r} {notches_left} {final_position:?} {notches_past} {result}");
+        result
     }
 }
-
-#[derive(Hash)]
-struct Notches(Vec<Position>);
 
 impl FromIterator<Position> for Notches {
     fn from_iter<T: IntoIterator<Item = Position>>(iter: T) -> Self {
@@ -142,12 +146,31 @@ impl FromIterator<Position> for Notches {
 
 #[cfg(test)]
 mod tests {
+    use super::{Rotor, Rotors};
     use crate::{
         cipher::{Decode, Encode},
         common::{Character, Position},
     };
 
-    use super::{Rotor, Rotors};
+    #[test]
+    fn num_advances() {
+        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
+
+        {
+            let advances_lt_1_rot = r.get_num_advances(1);
+            assert_eq!(1, advances_lt_1_rot);
+        }
+
+        {
+            let advances_eq_1_rot = r.get_num_advances(26);
+            assert_eq!(advances_eq_1_rot, 2)
+        }
+
+        {
+            let advances_gt_1_rot = r.get_num_advances(53);
+            assert_eq!(advances_gt_1_rot, 4)
+        }
+    }
 
     #[test]
     fn construct_i() {
