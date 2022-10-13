@@ -86,7 +86,7 @@ mod tests_cipher {
 
     #[test]
     fn codec() {
-        let cipher = Cipher::from_str("ZYXWVUTSRQPONMLKJIHGFEDCBA").unwrap();
+        let cipher = Cipher::from_str("EKMFLGDQVZNTOWYHXUSPAIBRCJ").unwrap();
         ('A'..='Z')
             .into_iter()
             .map(|c| Character::try_from(c).unwrap())

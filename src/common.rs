@@ -71,14 +71,16 @@ impl Sub<Position> for Character {
         // -25..=-1 if rhs is bigger, otherwise 0..=25
         let offset: isize = (self.get_offset() as isize - rhs.0 as isize) % 26;
 
-        println!("{self}:{0} {rhs:?} {offset}", self.get_offset());
         let result = match offset {
             -25..=-1 => (26 + offset) as u8 + b'A',
             0..=25 => offset as u8 + b'A',
             _ => unreachable!(),
         };
 
-        println!("{}", result as char);
+        #[cfg(test)]
+        println!(
+            "SUB<Position> for Character: self:{self} rhs:{rhs:?} offset:{offset} result:{result}"
+        );
 
         Character::try_from(result as char).unwrap()
     }
@@ -120,6 +122,8 @@ impl Into<char> for Character {
 #[cfg(test)]
 mod tests_character {
 
+    use itertools::Itertools;
+
     use super::Character;
     use super::Position;
 
@@ -152,6 +156,39 @@ mod tests_character {
                         let _ = c + n;
                     })
             })
+    }
+
+    #[test]
+    fn sub_position() {
+        let chars: Vec<Character> = ('A'..='Z')
+            .into_iter()
+            .map(|c| Character::try_from(c).unwrap())
+            .collect();
+
+        let positions: Vec<Position> = (0..=25)
+            .into_iter()
+            .map(|n| Position::try_from(n).unwrap())
+            .collect();
+
+        let expected_val = |c: isize, n: isize| -> usize {
+            if c >= n {
+                (c - n).try_into().unwrap()
+            } else {
+                (26 + c - n).try_into().unwrap()
+            }
+        };
+
+        let t = |c: char, n: isize| {
+            let c: isize = (c as u8 - b'A').into();
+            let r: Character = chars[c as usize] - positions[n as usize];
+            let i = expected_val(c, n);
+            println!("{c} {r} {i}");
+            assert_eq!(r, chars[i])
+        };
+
+        (0..=25)
+            .into_iter()
+            .for_each(|n| ('A'..='Z').into_iter().for_each(|c| t(c, n)))
     }
 
     #[test]

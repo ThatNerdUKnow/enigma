@@ -11,7 +11,7 @@ use strum_macros::EnumString;
 
 /// This enum represents each available rotor for the real life enigma machine
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
-#[derive(EnumString, Hash, PartialEq, Eq, Clone)]
+#[derive(EnumString, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Rotors {
     I,
     II,
@@ -63,16 +63,16 @@ impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
         let iter = value.iter();
         let rawcount = iter.clone().count();
         let unique = iter.clone().map(|(r, _)| r).unique().count();
-        match (rawcount, unique) {
-            (3, 3) => iter.cloned().map(|r| Rotor::try_from(r)).try_collect(),
-            (_, 0..=2) => Err(anyhow!(
-                "Duplicate rotors: You may not use the same rotor more than once"
-            )),
-            (0..=2, _) => Err(anyhow!("Too few rotors: you must provide 3 rotors")),
-            _ => Err(anyhow!(
-                "Too many rotors: you must provide exactly 3 rotors"
-            )),
-        }
+
+        if rawcount == 3 && unique == 3 {
+            let v: Vec<Rotor> = iter
+                .clone()
+                .map(|(r, c)| Rotor::try_from((*r, *c)))
+                .try_collect()?;
+
+            return Ok(RotorConfig(v));
+        };
+        Err(anyhow!("Invalid rotor configuration"))
     }
 }
 
@@ -117,18 +117,21 @@ impl Rotor {
     }
 
     fn encode_at(&self, c: Character, n: usize) -> Character {
+        println!("{c} {n} {:?}", self.position);
         let offset: Position = self.position + n;
         self.cipher.encode(c + offset)
     }
 
     fn decode_at(&self, c: Character, n: usize) -> Character {
         let offset: Position = self.position + n;
-        self.cipher.decode(c - offset)
+        let dec = self.cipher.decode(c);
+
+        println!("{dec} {offset:?}");
+        dec - offset
     }
 
     /// given n revolutions of the current rotor, how many times will the next rotor in the sequence advance?
     fn get_num_advances(&self, n: usize) -> usize {
-        println!("{:?} {:?}", self.notches, self.position);
         let r = n / 26;
         let notches_left = self
             .notches
@@ -151,7 +154,6 @@ impl Rotor {
             result = result + notches_past
         }
 
-        println!("{r} {notches_left} {final_position:?} {notches_past} {result}");
         result
     }
 }
@@ -178,7 +180,11 @@ mod tests {
     fn rotorconfig_codec() {
         let r = || Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
 
-        let rc = RotorConfig(vec![r(), r(), r()]);
+        let r1 = Rotor::try_from((Rotors::I, 'B')).unwrap();
+        let r2 = Rotor::try_from((Rotors::IV, 'N')).unwrap();
+        let r3 = Rotor::try_from((Rotors::III, 'X')).unwrap();
+
+        let rc = RotorConfig(vec![r1, r2, r3]);
 
         let a = Character::try_from('A').unwrap();
 
@@ -263,17 +269,19 @@ mod tests {
 
     #[test]
     fn codec() {
-        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
+        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'B').unwrap();
 
-        (0..=u8::MAX).into_iter().for_each(|n| {
+        //EKMFLGDQVZNTOWYHXUSPAIBRCJ
+        let r = Rotor::try_from((Rotors::I, 'B')).unwrap();
+        (0..=1000).into_iter().for_each(|n| {
             ('A'..='Z')
                 .into_iter()
                 .map(|c| Character::try_from(c).unwrap())
                 .for_each(|plaintext| {
                     let ciphertext = r.encode_at(plaintext, n.into());
-                    let res = r.decode_at(ciphertext, n.into());
+                    let res = r.decode_at(ciphertext, n);
 
-                    println!("{n}: {plaintext}-{ciphertext}-{res}");
+                    println!("{n}: {:?} {plaintext}-{ciphertext}-{res}", r.position);
                     // fix subtraction code
 
                     assert_eq!(plaintext, res);
