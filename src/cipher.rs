@@ -112,7 +112,7 @@ mod tests_cipher {
                 let plaintext = cipher.decode(ciphertext);
 
                 //println!("{}: {} {}", c, ciphertext, plaintext);
-                assert!(c == plaintext)
+                assert_eq!(c, plaintext)
             })
     }
 

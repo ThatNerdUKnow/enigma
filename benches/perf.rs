@@ -35,10 +35,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     let k10 = gen_rand_string(10_000);
     let k100 = gen_rand_string(100_000);
     let m1 = gen_rand_string(1_000_000);
+    let m10 = gen_rand_string(10_000_000);
+    let m100 = gen_rand_string(100_000_000);
+
     c.bench_function("1k", |b| b.iter(|| e.encode(black_box(&k1))));
     c.bench_function("10k", |b| b.iter(|| e.encode(black_box(&k10))));
     c.bench_function("100k", |b| b.iter(|| e.encode(black_box(&k100))));
     c.bench_function("1m", |b| b.iter(|| e.encode(black_box(&m1))));
+    c.bench_function("10m", |b| b.iter(|| e.encode(black_box(&m10))));
+    c.bench_function("100m", |b| b.iter(|| e.encode(black_box(&m100))));
 }
 
 criterion_group!(benches, criterion_benchmark);

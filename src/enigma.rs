@@ -1,6 +1,3 @@
-use anyhow::{anyhow, Error};
-use itertools::Itertools;
-
 use crate::{
     cipher::{Decode, Encode},
     common::{Character, ParsingError},
@@ -8,6 +5,9 @@ use crate::{
     reflector::{Reflector, Reflectors},
     rotor::{Rotor, RotorConfig, Rotors},
 };
+use anyhow::{anyhow, Error};
+use itertools::Itertools;
+use rayon::prelude::*;
 
 pub struct Enigma {
     rotors: RotorConfig,
@@ -36,8 +36,9 @@ impl Enigma {
     }
 
     pub fn encode(&self, s: &String) -> String {
-        s.chars()
-            .map(|c| Character::try_from(c))
+        s.as_bytes()
+            .par_iter()
+            .map(|c| Character::try_from(*c as char))
             .enumerate()
             .map(|(n, c)| match c {
                 Ok(plain) => self.encode_at(plain, n).into(),
