@@ -1,12 +1,12 @@
-mod cipher;
+/*mod cipher;
 mod common;
 mod enigma;
 mod plugboard;
 mod reflector;
-mod rotor;
+mod rotor;*/
 
-use cipher::{Cipher, Decode};
-use common::Character;
+use enigma::cipher::{Cipher, Decode};
+use enigma::common::Character;
 use std::str::FromStr;
 
 fn main() {

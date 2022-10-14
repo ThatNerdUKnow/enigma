@@ -77,11 +77,10 @@ impl Sub<Position> for Character {
             _ => unreachable!(),
         };
 
-        #[cfg(test)]
+        /*#[cfg(test)]
         println!(
             "SUB<Position> for Character: self:{self} rhs:{rhs:?} offset:{offset} result:{result}"
-        );
-
+        );*/
         Character::try_from(result as char).unwrap()
     }
 }

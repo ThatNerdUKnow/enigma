@@ -94,7 +94,7 @@ mod tests_cipher {
                 let ciphertext = cipher.encode(c);
                 let plaintext = cipher.decode(ciphertext);
 
-                println!("{}: {} {}", c, ciphertext, plaintext);
+                //println!("{}: {} {}", c, ciphertext, plaintext);
                 assert!(c == plaintext)
             })
     }

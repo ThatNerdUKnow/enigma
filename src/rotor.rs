@@ -117,7 +117,7 @@ impl Rotor {
     }
 
     fn encode_at(&self, c: Character, n: usize) -> Character {
-        println!("{c} {n} {:?}", self.position);
+        //println!("{c} {n} {:?}", self.position);
         let offset: Position = self.position + n;
         self.cipher.encode(c + offset)
     }
@@ -126,7 +126,7 @@ impl Rotor {
         let offset: Position = self.position + n;
         let dec = self.cipher.decode(c);
 
-        println!("{dec} {offset:?}");
+        //println!("{dec} {offset:?}");
         dec - offset
     }
 

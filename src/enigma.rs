@@ -9,7 +9,7 @@ use crate::{
     rotor::{Rotor, RotorConfig, Rotors},
 };
 
-struct Enigma {
+pub struct Enigma {
     rotors: RotorConfig,
     plugboard: Plugboard,
     reflector: Reflector,
