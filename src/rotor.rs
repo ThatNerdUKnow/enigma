@@ -1,12 +1,18 @@
-#![allow(dead_code)]
+use std::{hash::Hash, str::FromStr};
 
+use crate::{
+    cipher::{Cipher, Decode, Encode},
+    common::{Character, Position},
+};
+use anyhow::anyhow;
+use bruh_moment::Bruh;
 use itertools::Itertools;
-use prae::Wrapper;
-use std::{fmt, hash};
+use strum_macros::EnumString;
 
-/// This enum represents each available rotor on the enigma machine plus an extra rotor used for debug purposes.
+/// This enum represents each available rotor for the real life enigma machine
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
-pub enum RotorList {
+#[derive(EnumString, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum Rotors {
     I,
     II,
     III,
@@ -15,333 +21,271 @@ pub enum RotorList {
     VI,
     VII,
     VIII,
-    DEBUG,
 }
-
-/// Struct used in the implementation of the rotor mechanism
-#[derive(Debug,Eq)]
+/// Individual rotor used in the rotor mechanism
 pub struct Rotor {
-    cipher: RotorCipher,
-    notch: &'static [char],
-    position: char,
+    position: Position,
+    cipher: Cipher,
+    notches: Notches,
 }
 
-prae::define! {
-    #[derive(Debug,Hash,Eq,PartialEq)]
-    pub RotorCipher: &'static str;
-    validate(CipherError) |cipher|{
+#[derive(Hash, Debug)]
+struct Notches(Vec<Position>);
 
+pub struct RotorConfig(Vec<Rotor>);
 
+impl RotorConfig {
+    pub fn encode_at(&self, c: Character, n: usize) -> Character {
+        let encode_first_rotor = self.0[0].encode_at(c, n);
+        let n = self.0[0].get_num_advances(n);
+        let encode_second_rotor = self.0[1].encode_at(encode_first_rotor, n);
+        let n = self.0[1].get_num_advances(n);
+        let encode_third_rotor = self.0[2].encode_at(encode_second_rotor, n);
+        encode_third_rotor
+    }
 
-        match cipher.len(){
-            26 => (),
-            _ => return Err(CipherError::Length)
+    pub fn decode_at(&self, c: Character, n: usize) -> Character {
+        let r1_advances = n;
+        let r2_advances = self.0[0].get_num_advances(n);
+        let r3_advances = self.0[1].get_num_advances(r2_advances);
+
+        let decode_third_rotor = self.0[2].decode_at(c, r3_advances);
+        let decode_second_rotor = self.0[1].decode_at(decode_third_rotor, r2_advances);
+        let decode_first_rotor = self.0[0].decode_at(decode_second_rotor, r1_advances);
+        decode_first_rotor
+    }
+}
+
+impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
+    type Error = Bruh;
+
+    fn try_from(value: [(Rotors, char); 3]) -> Result<Self, Self::Error> {
+        let iter = value.iter();
+        let rawcount = iter.clone().count();
+        let unique = iter.clone().map(|(r, _)| r).unique().count();
+
+        if rawcount == 3 && unique == 3 {
+            let v: Vec<Rotor> = iter
+                .clone()
+                .map(|(r, c)| Rotor::try_from((*r, *c)))
+                .try_collect()?;
+
+            return Ok(RotorConfig(v));
         };
+        Err(anyhow!("Invalid rotor configuration"))
+    }
+}
 
-        match cipher.chars().unique().count() {
-            26 => (),
-            _=> return Err(CipherError::Unique)
-        };
-
-        let mapping = cipher.
-        chars()
-        .map(|c|{
-            const OFFSET: u8 = b'A';
-            let c = c as u8 - OFFSET;
-            cipher
-            .chars()
-            .nth(c as usize)
-            .unwrap()
-        })
-        .unique();
-
-        match mapping.count(){
-            26 => (),
-            _ => return Err(CipherError::Mapping)
-        };
-
-        let charset = cipher.chars().all(|c| c >= 'A' && c <= 'Z');
-
-        match charset{
-            true => (),
-            false => return Err(CipherError::Charset)
+impl FromIterator<Rotor> for RotorConfig {
+    fn from_iter<T: IntoIterator<Item = Rotor>>(iter: T) -> Self {
+        let num = iter.into_iter().count();
+        match num {
+            0..=2 => panic!("Too few items in iterator to create rotorconfig"),
+            3 => todo!(),
+            _ => panic!("Too many items in iterator to create rotorconfig"),
         }
+    }
+}
 
-        Ok(())
-    };
+impl TryFrom<(Rotors, char)> for Rotor {
+    type Error = Bruh;
+
+    fn try_from((variant, position): (Rotors, char)) -> Result<Self, Self::Error> {
+        match variant {
+            Rotors::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
+            Rotors::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
+            Rotors::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
+            Rotors::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
+            Rotors::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
+            Rotors::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
+            Rotors::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
+            Rotors::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
+        }
+    }
 }
 
 impl Rotor {
-    /// Generates a new Rotor.
-    /// The cipher is a 26 character long string representing the substitution cipher for the rotor
-    /// The cipher must only contain values `A-Z` inclusive and characters may not be repeated  
-    /// The `position` param must only be a char between `A-Z`
-    fn new(cipher: &'static str, notch: &'static [char], position: char) -> Rotor {
-        // TODO Ensure that cipher is only 26 chars long with valid A-Z values only
-
-        Rotor {
-            cipher: RotorCipher::new(cipher).unwrap(),
-            notch,
-            position,
-        }
-    }
-
-    /// Returns a pre-generated rotor given a member of the `RotorList` enum and a position between `A-Z`
-    pub fn from(rotor_type: RotorList, position: char) -> Rotor {
-        match rotor_type {
-            RotorList::I => Rotor::new("EKMFLGDQVZNTOWYHXUSPAIBRCJ", &['Q'], position),
-            RotorList::II => Rotor::new("AJDKSIRUXBLHWTMCQGZNPYFVOE", &['E'], position),
-            RotorList::III => Rotor::new("BDFHJLCPRTXVZNYEIWGAKMUSQO", &['V'], position),
-            RotorList::IV => Rotor::new("ESOVPZJAYQUIRHXLNFTGKDCMWB", &['J'], position),
-            RotorList::V => Rotor::new("VZBRGITYUPSDNHLXAWMJQOFECK", &['Z'], position),
-            RotorList::VI => Rotor::new("JPGVOUMFYQBENHZRDKASXLICTW", &['Z', 'M'], position),
-            RotorList::VII => Rotor::new("NZJHGRCXMYSWBOUFAIVLPEKQDT", &['Z', 'M'], position),
-            RotorList::VIII => Rotor::new("FKQHTLXOCBJSPDZRAMEWNIUYGV", &['Z', 'M'], position),
-            RotorList::DEBUG => Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &[], position),
-        }
-    }
-
-    /// Used to advance the position of the rotor, returns a char representing the rotor's final position
-    pub fn rotate(&mut self) -> char {
-        match self.position {
-            'A'..='Y' => self.position = (self.position as u8 + 1) as char,
-            'Z' => self.position = 'A',
-            _ => {
-                panic!("By the time rotate is invoked, position should be a valid char between A-Z")
-            }
-        }
-
-        self.position
-    }
-
-    /// Used to determine if the next rotor in the sequence should rotate
-    pub fn should_advance_next(&self) -> bool {
-        self.notch.iter().any(|notch| {
-            let mut notch_position = *notch as u8 + 1;
-            if notch_position > b'Z' {
-                notch_position = b'A'
-            }
-            self.position == notch_position as char
+    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Bruh> {
+        let cipher = Cipher::from_str(c).unwrap();
+        let notches = n.iter().map(|p| Position::try_from(*p).unwrap()).collect();
+        let position = Position::try_from(p)?;
+        Ok(Rotor {
+            position: position,
+            cipher: cipher,
+            notches: notches,
         })
     }
 
-    /// Encodes the given char
-    pub fn encode(&self, c: char) -> char {
-        const OFFSET: u8 = b'A';
-        let plaintext = c as u8 - OFFSET;
-        let position = self.position as u8 - OFFSET;
-        let mut index: u8 = plaintext + position;
+    fn encode_at(&self, c: Character, n: usize) -> Character {
+        //println!("{c} {n} {:?}", self.position);
+        let offset: Position = self.position + n;
+        self.cipher.encode(c + offset)
+    }
 
-        if index > b'Z' - OFFSET {
-            index -= b'Z' - OFFSET + 1;
+    fn decode_at(&self, c: Character, n: usize) -> Character {
+        let offset: Position = self.position + n;
+        let dec = self.cipher.decode(c);
+
+        //println!("{dec} {offset:?}");
+        dec - offset
+    }
+
+    /// given n revolutions of the current rotor, how many times will the next rotor in the sequence advance?
+    fn get_num_advances(&self, n: usize) -> usize {
+        let r = n / 26;
+        let notches_left = self
+            .notches
+            .0
+            .iter()
+            .filter(|notch| self.position <= **notch)
+            .count();
+
+        let final_position = Position::try_from((n % 26) as u8).unwrap();
+        let notches_past = self
+            .notches
+            .0
+            .iter()
+            .filter(|notch| final_position > **notch)
+            .count();
+
+        let mut result = (r * self.notches.0.len()) + notches_left;
+
+        if r > 0 {
+            result = result + notches_past
         }
-        self.cipher.get().chars().nth(index as usize).unwrap()
+
+        result
     }
+}
 
-    /// Decodes the given char
-    pub fn decode(&self, c: char) -> char {
-        const OFFSET: u8 = b'A';
-        let ciphertext: u8 = self // Index of first occurance of the given char in the cipher string
-            .cipher
-            .get()
-            .chars()
-            .position(|x| x == c)
-            .unwrap()
-            .try_into()
-            .unwrap();
-
-        let position_offset = self.position as u8 - OFFSET; // rotation index
-
-        let mut decoded: u8 = (ciphertext + OFFSET) - position_offset;
-
-        if ciphertext < position_offset {
-            decoded = b'Z' - position_offset + ciphertext + 1
+impl FromIterator<Position> for Notches {
+    fn from_iter<T: IntoIterator<Item = Position>>(iter: T) -> Self {
+        let mut c = Notches(Vec::new());
+        for i in iter {
+            c.0.push(i)
         }
-
-        decoded as char
-    }
-}
-
-impl PartialEq for Rotor {
-    fn eq(&self, other: &Self) -> bool {
-        self.cipher.get() == other.cipher.get()
-            && self.notch == other.notch
-            //&& self.position == other.position
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.cipher.get() != other.cipher.get()
-            && self.notch != other.notch
-            //&& self.position != other.position
-    }
-}
-
-//impl Eq for Rotor {}
-
-impl hash::Hash for Rotor{
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.cipher.hash(state);
-        self.notch.hash(state);
-    }
-}
-pub enum CipherError {
-    Length,
-    Unique,
-    Mapping,
-    Charset,
-}
-
-impl fmt::Debug for CipherError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            CipherError::Length => {
-                write!(f, "The given cipher must be exactly 26 characters").unwrap()
-            }
-            CipherError::Unique => {
-                write!(f, "Each character in the cipher may only appear once").unwrap()
-            }
-            CipherError::Mapping => write!(
-                f,
-                "Cipher encodes must be reversible. If A maps to Z, Z must also map to A"
-            )
-            .unwrap(),
-            CipherError::Charset => {
-                write!(f, "Cipher may only include characters A-Z inclusive").unwrap()
-            }
-        };
-        Ok(())
+        c
     }
 }
 
 #[cfg(test)]
 mod tests {
-
-    use std::{collections::hash_map::DefaultHasher, hash::{Hash, Hasher}};
-
-    use super::*;
+    use super::{Rotor, RotorConfig, Rotors};
+    use crate::{
+        cipher::{Decode, Encode},
+        common::{Character, Position},
+    };
 
     #[test]
-    fn codec() {
-        let current_rotor = Rotor::from(RotorList::DEBUG, 'C');
-        ('A'..='Z').into_iter().for_each(|c| {
-            let ciphertext = current_rotor.encode(c);
-            let plaintext = current_rotor.decode(ciphertext);
+    fn rotorconfig_codec() {
+        let r = || Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
 
-            println!(
-                "{}: Encodes to: {}, Decodes to: {}",
-                c, ciphertext, plaintext
-            );
-            assert_eq!(c, plaintext);
-        })
+        let r1 = Rotor::try_from((Rotors::I, 'B')).unwrap();
+        let r2 = Rotor::try_from((Rotors::IV, 'N')).unwrap();
+        let r3 = Rotor::try_from((Rotors::III, 'X')).unwrap();
+
+        let rc = RotorConfig(vec![r1, r2, r3]);
+
+        let a = Character::try_from('A').unwrap();
+
+        let t = |n: usize| {
+            let ct = rc.encode_at(a, n);
+            let pt = rc.decode_at(ct, n);
+            assert_eq!(a, pt)
+        };
+
+        t(1);
+        t(26);
+        t(53);
+        t(1_000_000);
     }
 
     #[test]
-    fn rotation() {
-        let mut current_rotor = Rotor::from(RotorList::I, 'A');
-        (0..=200).into_iter().for_each(|_| {
-            let inputchar = current_rotor.position;
+    fn num_advances() {
+        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
 
-            let new_position = current_rotor.rotate();
-            println!("{}: {}", inputchar, new_position);
-            match inputchar {
-                'A'..='Y' => assert_eq!(new_position, (inputchar as u8 + 1) as char),
-                'Z' => assert_eq!(new_position, 'A'),
-                _ => panic!("Position should only be between A-Z after rotation"),
-            }
-        })
-    }
+        {
+            let advances_lt_1_rot = r.get_num_advances(1);
+            assert_eq!(1, advances_lt_1_rot);
+        }
 
-    #[test]
-    fn should_advance_next() {
-        let mut current_rotor = Rotor::from(RotorList::I, 'B');
-        (0..26).into_iter().for_each(|x| {
-            const OFFSET: u8 = b'A';
-            let inputchar = (x + OFFSET) as char;
-            println!("{}", inputchar);
+        {
+            let advances_eq_1_rot = r.get_num_advances(26);
+            assert_eq!(advances_eq_1_rot, 2)
+        }
 
-            current_rotor.rotate();
-
-            let does_advance_next = current_rotor.should_advance_next();
-            current_rotor.notch.iter().for_each(|notch| {
-                if current_rotor.position as u8 == *notch as u8 + 1 {
-                    assert_eq!(true, does_advance_next)
-                } else {
-                    assert_eq!(false, does_advance_next)
-                }
-            })
-        })
+        {
+            let advances_gt_1_rot = r.get_num_advances(53);
+            assert_eq!(advances_gt_1_rot, 4)
+        }
     }
 
     #[test]
     fn construct_i() {
-        Rotor::from(RotorList::I, 'A');
+        let _ = Rotor::try_from((Rotors::I, 'A'));
     }
 
     #[test]
     fn construct_ii() {
-        Rotor::from(RotorList::II, 'A');
+        let _ = Rotor::try_from((Rotors::II, 'A'));
     }
 
     #[test]
     fn construct_iii() {
-        Rotor::from(RotorList::III, 'A');
+        let _ = Rotor::try_from((Rotors::III, 'A'));
     }
 
     #[test]
     fn construct_iv() {
-        Rotor::from(RotorList::IV, 'A');
+        let _ = Rotor::try_from((Rotors::IV, 'A'));
     }
 
     #[test]
     fn construct_v() {
-        Rotor::from(RotorList::V, 'A');
+        let _ = Rotor::try_from((Rotors::V, 'A'));
     }
 
     #[test]
     fn construct_vi() {
-        Rotor::from(RotorList::VI, 'A');
+        let _ = Rotor::try_from((Rotors::VI, 'A'));
     }
 
     #[test]
     fn construct_vii() {
-        Rotor::from(RotorList::VII, 'A');
+        let _ = Rotor::try_from((Rotors::VII, 'A'));
     }
 
     #[test]
     fn construct_viii() {
-        Rotor::from(RotorList::VIII, 'A');
+        let _ = Rotor::try_from((Rotors::VIII, 'A'));
     }
 
     #[test]
-    fn construct_debug() {
-        Rotor::from(RotorList::DEBUG, 'A');
+    fn construct_all_positions() {
+        ('A'..='Z').into_iter().for_each(|c| {
+            let _ = Rotor::try_from((Rotors::I, c));
+        })
     }
 
     #[test]
-    fn equality(){
-        let r1 = Rotor::from(RotorList::I, 'Z');
-        let r2 = Rotor::from(RotorList::I, 'A');
-        let r3 = Rotor::from(RotorList::II, 'A');
+    fn codec() {
+        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'B').unwrap();
 
-        assert_eq!(r1,r2);
-        assert_ne!(r1,r3);
-    }
+        //EKMFLGDQVZNTOWYHXUSPAIBRCJ
+        let r = Rotor::try_from((Rotors::I, 'B')).unwrap();
+        (0..=1000).into_iter().for_each(|n| {
+            ('A'..='Z')
+                .into_iter()
+                .map(|c| Character::try_from(c).unwrap())
+                .for_each(|plaintext| {
+                    let ciphertext = r.encode_at(plaintext, n.into());
+                    let res = r.decode_at(ciphertext, n);
 
-    #[test]
-    fn hashing(){
-        let mut hasher1 = DefaultHasher::new();
-        Rotor::from(RotorList::I,'Z').hash(&mut hasher1);
-        let hash1: u64 = hasher1.finish();
+                    println!("{n}: {:?} {plaintext}-{ciphertext}-{res}", r.position);
+                    // fix subtraction code
 
-        let mut hasher2 = DefaultHasher::new();
-        Rotor::from(RotorList::I,'Z').hash(&mut hasher2);
-        let hash2: u64 = hasher2.finish();
-
-        let mut hasher3 = DefaultHasher::new();
-        Rotor::from(RotorList::II,'Z').hash(&mut hasher3);
-        let hash3: u64 = hasher3.finish();
-
-        assert_eq!(hash1,hash2);
-        assert_ne!(hash1,hash3);
+                    assert_eq!(plaintext, res);
+                });
+        })
     }
 }

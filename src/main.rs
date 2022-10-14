@@ -1,22 +1,25 @@
-mod rotor;
-mod reflector;
+/*mod cipher;
+mod common;
 mod enigma;
+mod plugboard;
+mod reflector;
+mod rotor;*/
 
-use crate::enigma::{Enigma};
-use crate::rotor::{RotorList, Rotor};
-use crate::reflector::{ReflectorList, Reflector};
+use enigma::cipher::{Cipher, Decode};
+use enigma::common::Character;
+use std::str::FromStr;
 
 fn main() {
-    let message = "HELLOFROMENIGMA";
-    let rotor_config = vec![Rotor::from(RotorList::I,'A')];
+    ('A'..='z')
+        .into_iter()
+        .for_each(|c| match Character::try_from(c) {
+            Ok(output) => println!("{}:{:?}", c, output),
+            Err(message) => println!("{},{}", c, message),
+        });
 
-    let rotor_config_2 = vec![Rotor::from(RotorList::I,'A')];
-    let mut enigma_machine = Enigma::new(rotor_config,Reflector::from(ReflectorList::B));
-    let mut enigma_2 = Enigma::new(rotor_config_2,Reflector::from(ReflectorList::B));
+    let cipher = Cipher::from_str("ZYXWVUTSRQPONMLKJIHGFEDCBA").unwrap();
 
-    let cipher_text = enigma_machine.encode(message.to_string());
-    println!("{}",cipher_text);
+    let c = Character::try_from('A').unwrap();
 
-    let plain_text = enigma_2.encode(cipher_text);
-    println!("{}",plain_text);
+    let x = cipher.decode(c);
 }
