@@ -1,8 +1,11 @@
 [package]
-name = "enigma"
+name = "libenigma"
 version = "0.1.0"
 edition = "2021"
-
+authors = ["Brandon Piña"]
+description = "A library for simulating an Enigma Machine"
+license = "MIT"
+repository = "https://github.com/ThatNerdUKnow/enigma"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
