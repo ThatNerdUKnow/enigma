@@ -3,10 +3,13 @@ use std::{
     ops::{Add, Sub},
 };
 
+use nohash_hasher::IsEnabled;
 use thiserror::Error;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Character(char);
+
+impl IsEnabled for Character {}
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd)]
 pub struct Position(u8);
