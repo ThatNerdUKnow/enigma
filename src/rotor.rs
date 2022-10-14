@@ -171,14 +171,11 @@ impl FromIterator<Position> for Notches {
 #[cfg(test)]
 mod tests {
     use super::{Rotor, RotorConfig, Rotors};
-    use crate::{
-        cipher::{Decode, Encode},
-        common::{Character, Position},
-    };
+    use crate::common::Character;
 
     #[test]
     fn rotorconfig_codec() {
-        let r = || Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
+        let _r = || Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'A').unwrap();
 
         let r1 = Rotor::try_from((Rotors::I, 'B')).unwrap();
         let r2 = Rotor::try_from((Rotors::IV, 'N')).unwrap();
@@ -269,7 +266,7 @@ mod tests {
 
     #[test]
     fn codec() {
-        let r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'B').unwrap();
+        let _r = Rotor::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ", &['A'], 'B').unwrap();
 
         //EKMFLGDQVZNTOWYHXUSPAIBRCJ
         let r = Rotor::try_from((Rotors::I, 'B')).unwrap();

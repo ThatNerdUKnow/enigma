@@ -3,10 +3,8 @@ use crate::{
     common::{Character, ParsingError},
     plugboard::Plugboard,
     reflector::{Reflector, Reflectors},
-    rotor::{Rotor, RotorConfig, Rotors},
+    rotor::RotorConfig,
 };
-use anyhow::{anyhow, Error};
-use itertools::Itertools;
 use rayon::prelude::*;
 
 pub struct Enigma {

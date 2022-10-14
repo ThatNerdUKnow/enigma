@@ -21,5 +21,5 @@ fn main() {
 
     let c = Character::try_from('A').unwrap();
 
-    let x = cipher.decode(c);
+    let _x = cipher.decode(c);
 }

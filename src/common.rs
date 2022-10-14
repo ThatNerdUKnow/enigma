@@ -124,8 +124,6 @@ impl Into<char> for Character {
 #[cfg(test)]
 mod tests_character {
 
-    use itertools::Itertools;
-
     use super::Character;
     use super::Position;
 
