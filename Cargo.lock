@@ -198,22 +198,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
-name = "enigma"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bruh_moment",
- "criterion",
- "itertools",
- "nohash-hasher",
- "rand",
- "rayon",
- "strum",
- "strum_macros",
- "thiserror",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -296,6 +280,22 @@ name = "libc"
 version = "0.2.135"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68783febc7782c6c5cb401fbda4de5a9898be1762314da0bb2c10ced61f18b0c"
+
+[[package]]
+name = "libenigma"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bruh_moment",
+ "criterion",
+ "itertools",
+ "nohash-hasher",
+ "rand",
+ "rayon",
+ "strum",
+ "strum_macros",
+ "thiserror",
+]
 
 [[package]]
 name = "log"

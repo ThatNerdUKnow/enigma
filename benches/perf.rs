@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use enigma::{
+use libenigma::{
     enigma::Enigma,
     plugboard::{Plugboard, Plugs},
     reflector::Reflectors,
