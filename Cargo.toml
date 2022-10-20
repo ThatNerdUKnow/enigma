@@ -11,6 +11,7 @@ repository = "https://github.com/ThatNerdUKnow/enigma"
 [dependencies]
 anyhow = "1.0.65"
 bruh_moment = "0.1.1"
+inquire = "0.4.0"
 itertools = "0.10.3"
 nohash-hasher = "0.2.0"
 rand = "0.8.5"
