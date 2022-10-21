@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 pub fn getReflector() -> Reflectors {
     let options: Vec<Reflectors> = Reflectors::iter().collect();
 
-    let ans = Select::new("Select a rotor", options).prompt();
+    let ans = Select::new("Select Reflector", options).prompt();
 
     ans.unwrap()
 }
@@ -16,11 +16,12 @@ pub fn getReflector() -> Reflectors {
 pub fn getRotors() -> () {
     let mut selectedrotors: HashSet<Rotors> = HashSet::new();
     let options: Vec<Rotors> = Rotors::iter().collect();
+    let position_options: Vec<char> = ('A'..='Z').collect_vec();
 
     for i in 0..3 {
         // Get Rotor from user
         let r: Rotors = *Select::new(
-            "Select a rotor",
+            &format!("Select rotor for position {}", i + 1),
             options
                 .iter()
                 .filter(|r| !selectedrotors.contains(r))
@@ -31,6 +32,13 @@ pub fn getRotors() -> () {
 
         selectedrotors.insert(r);
         // Get char from user
+
+        let p: char = Select::new(
+            &format!("Select position for rotor '{r}'"),
+            position_options.clone(),
+        )
+        .prompt()
+        .unwrap();
     }
     ()
 }
