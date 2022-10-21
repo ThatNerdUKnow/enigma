@@ -7,11 +7,11 @@ use crate::{
 use anyhow::anyhow;
 use bruh_moment::Bruh;
 use itertools::Itertools;
-use strum_macros::EnumString;
+use strum_macros::{Display, EnumIter, EnumString};
 
 /// This enum represents each available rotor for the real life enigma machine
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
-#[derive(EnumString, Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(EnumString, EnumIter, Hash, PartialEq, Eq, Clone, Copy, Display)]
 pub enum Rotors {
     I,
     II,
