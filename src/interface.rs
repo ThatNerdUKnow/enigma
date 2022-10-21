@@ -13,11 +13,12 @@ pub fn getReflector() -> Reflectors {
     ans.unwrap()
 }
 
-pub fn getRotors() -> () {
+pub fn getRotors() -> [(Rotors, char); 3] {
     let mut selectedrotors: HashSet<Rotors> = HashSet::new();
     let options: Vec<Rotors> = Rotors::iter().collect();
     let position_options: Vec<char> = ('A'..='Z').collect_vec();
 
+    let mut ans: Vec<(Rotors, char)> = Vec::new();
     for i in 0..3 {
         // Get Rotor from user
         let r: Rotors = *Select::new(
@@ -39,6 +40,8 @@ pub fn getRotors() -> () {
         )
         .prompt()
         .unwrap();
+
+        ans.push((r, p));
     }
-    ()
+    ans.as_slice().try_into().unwrap()
 }

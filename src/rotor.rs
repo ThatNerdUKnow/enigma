@@ -11,7 +11,7 @@ use strum_macros::{Display, EnumIter, EnumString};
 
 /// This enum represents each available rotor for the real life enigma machine
 /// Each rotor is a simple substition cipher plus one or two notches which would allow the next rotor in the sequence to rotate
-#[derive(EnumString, EnumIter, Hash, PartialEq, Eq, Clone, Copy, Display)]
+#[derive(EnumString, EnumIter, Hash, PartialEq, Eq, Clone, Copy, Display, Debug)]
 pub enum Rotors {
     I,
     II,

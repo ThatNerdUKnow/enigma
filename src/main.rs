@@ -2,6 +2,9 @@ use interface::{getReflector, getRotors};
 
 mod interface;
 fn main() {
-    getReflector();
-    getRotors();
+    let reflector = getReflector();
+    let rotors = getRotors();
+
+    println!("{reflector}");
+    println!("{rotors:?}");
 }
