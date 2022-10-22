@@ -1,14 +1,43 @@
-use std::collections::HashSet;
-
+use bruh_moment::Bruh;
 use inquire::{validator::ExactLengthValidator, MultiSelect, Select};
 use itertools::Itertools;
-use libenigma::{reflector::Reflectors, rotor::Rotors};
+use libenigma::{
+    common::Character,
+    enigma::Enigma,
+    plugboard::{Plug, Plugboard, Plugs},
+    reflector::Reflectors,
+    rotor::{RotorConfig, Rotors},
+};
+use std::collections::HashSet;
 use strum::IntoEnumIterator;
 
 pub struct Config {
     reflector: Reflectors,
     rotors: [(Rotors, char); 3],
     plugs: Vec<(char, char)>,
+}
+
+impl TryFrom<Config> for Enigma {
+    type Error = Bruh;
+
+    fn try_from(value: Config) -> Result<Self, Self::Error> {
+        let rotor_config: RotorConfig = RotorConfig::try_from(value.rotors)?;
+        let plugs: Vec<Plug> = value
+            .plugs
+            .iter()
+            .map(|(l, r)| {
+                (
+                    Character::try_from(*l).unwrap(),
+                    Character::try_from(*r).unwrap(),
+                )
+            })
+            .map(|p| Plug::try_from(p))
+            .try_collect()?;
+        let plugs: Plugs = Plugs::try_from(plugs)?;
+        let plugboard = Plugboard::try_from(plugs)?;
+
+        Ok(Enigma::new(rotor_config, plugboard, value.reflector))
+    }
 }
 
 impl Config {
