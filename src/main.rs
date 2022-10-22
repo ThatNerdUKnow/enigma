@@ -1,14 +1,6 @@
-use interface::{getReflector, getRotors};
-
-use crate::interface::get_plugs;
+use interface::Config;
 
 mod interface;
 fn main() {
-    let reflector = getReflector();
-    let rotors = getRotors();
-    let plugs = get_plugs();
-
-    println!("{reflector}");
-    println!("{rotors:?}");
-    println!("{plugs:?}");
+    let config = Config::new();
 }
