@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter};
 
 use crate::{
@@ -15,7 +16,7 @@ pub struct Reflector {
 /// Each reflector is a substitution cipher where the substitutions are reflective. For example, if a reflector
 /// substitutes `A` with `Z` it also substitutes `Z` with `A`.  
 /// The reflector does not move
-#[derive(EnumIter, Display)]
+#[derive(EnumIter, Display, Serialize, Deserialize)]
 pub enum Reflectors {
     A,
     B,

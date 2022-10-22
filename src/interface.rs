@@ -8,9 +8,11 @@ use libenigma::{
     reflector::Reflectors,
     rotor::{RotorConfig, Rotors},
 };
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use strum::IntoEnumIterator;
 
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     reflector: Reflectors,
     rotors: [(Rotors, char); 3],
