@@ -34,10 +34,8 @@ impl Enigma {
     }
 
     pub fn encode(&self, s: &String) -> String {
-        s.as_bytes()
-            .par_iter()
-            .map(|c| Character::try_from(*c as char))
-            .enumerate()
+        s.par_char_indices()
+            .map(|(i, c)| (i, Character::try_from(c)))
             .map(|(n, c)| match c {
                 Ok(plain) => self.encode_at(plain, n).into(),
                 Err(e) => match e {
