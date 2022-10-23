@@ -18,17 +18,18 @@ use strum::IntoEnumIterator;
 pub struct Args {
     /// Path to config file. If config file exists, that config will be used. Otherwise a config file will be generated
     #[arg(short, long)]
-    config: Option<String>,
+    pub config: Option<String>,
 
     /// Path to output ciphertext
     #[arg(short, long)]
-    output: Option<String>,
+    pub output: Option<String>,
 
-    /// Path to plaintext input file
+    /// Path to plaintext input file.
     #[arg(short, long)]
-    input: Option<String>,
+    pub input: Option<String>,
 
-    plaintext: Option<String>,
+    /// (Optional) Plaintext to encode. Mutually exclusive with -i command line argument
+    pub plaintext: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
