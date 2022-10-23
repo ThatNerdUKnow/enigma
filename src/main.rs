@@ -24,7 +24,13 @@ fn main() {
 
     let e = Enigma::try_from(config).unwrap();
 
-    let plaintext = Text::new("Please enter text to encode:").prompt().unwrap();
+    let plaintext: String = match args.input {
+        Some(path) => {
+            let buf = fs::read(path).unwrap();
+            String::from_utf8(buf).unwrap()
+        }
+        None => Text::new("Please enter text to encode:").prompt().unwrap(),
+    };
 
     let ciphertext = e.encode(&plaintext);
 
