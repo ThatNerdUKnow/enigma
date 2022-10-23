@@ -34,5 +34,8 @@ fn main() {
 
     let ciphertext = e.encode(&plaintext);
 
-    println!("{ciphertext}")
+    match args.output {
+        Some(path) => fs::write(path, ciphertext).unwrap(),
+        None => println!("{ciphertext}"),
+    }
 }
