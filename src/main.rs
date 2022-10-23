@@ -29,7 +29,10 @@ fn main() {
             let buf = fs::read(path).unwrap();
             String::from_utf8(buf).unwrap()
         }
-        None => Text::new("Please enter text to encode:").prompt().unwrap(),
+        None => match args.plaintext {
+            Some(text) => text,
+            None => Text::new("Please enter text to encode:").prompt().unwrap(),
+        },
     };
 
     let ciphertext = e.encode(&plaintext);
