@@ -1,4 +1,5 @@
 use bruh_moment::Bruh;
+use clap::Parser;
 use inquire::{validator::ExactLengthValidator, MultiSelect, Select};
 use itertools::Itertools;
 use libenigma::{
@@ -11,6 +12,24 @@ use libenigma::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use strum::IntoEnumIterator;
+
+#[derive(Parser, Debug)]
+#[command(version)]
+pub struct Args {
+    /// Path to config file. If config file exists, that config will be used. Otherwise a config file will be generated
+    #[arg(short, long)]
+    config: Option<String>,
+
+    /// Path to output ciphertext
+    #[arg(short, long)]
+    output: Option<String>,
+
+    /// Path to plaintext input file
+    #[arg(short, long)]
+    input: Option<String>,
+
+    plaintext: Option<String>,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {

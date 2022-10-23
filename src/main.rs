@@ -1,9 +1,11 @@
+use clap::Parser;
 use inquire::Text;
-use interface::Config;
+use interface::{Args, Config};
 use libenigma::enigma::Enigma;
 
 mod interface;
 fn main() {
+    let args = Args::parse();
     let config = Config::new();
 
     let e = Enigma::try_from(config).unwrap();
