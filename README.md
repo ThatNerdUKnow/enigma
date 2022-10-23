@@ -2,7 +2,7 @@
 An implementation of the Enigma Machine written in rust
 
 ### Installation
-- [Instal Rust](https://www.rust-lang.org/)  
+- [Install Rust](https://www.rust-lang.org/)  
 - run `cargo install libenigma`  
 - run `libenigma -h` for usage instructions  
 
