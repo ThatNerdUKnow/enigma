@@ -1,9 +1,8 @@
 use crate::common::Character;
-use anyhow::Context;
-use bruh_moment::{bruh, Bruh};
+use anyhow::{bail, Context};
 use itertools::Itertools;
 use nohash_hasher::BuildNoHashHasher;
-use std::{collections::HashMap, str::FromStr};
+use std::{any, collections::HashMap, str::FromStr};
 use thiserror::Error;
 
 pub trait Encode {
@@ -40,7 +39,7 @@ enum CipherError {
 }
 
 impl FromStr for Cipher {
-    type Err = Bruh;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res: Vec<Character> = s
@@ -51,15 +50,15 @@ impl FromStr for Cipher {
             .with_context(|| format!("Tried to create a cipher from a string"))?;
 
         match s.len() {
-            0..=25 => Err(bruh!(CipherError::TooFew(s.len()))),
+            0..=25 => Err(bail!(CipherError::TooFew(s.len()))),
             26 => Cipher::try_from(res),
-            _ => Err(bruh!(CipherError::TooMany(s.len()))),
+            _ => Err(bail!(CipherError::TooMany(s.len()))),
         }
     }
 }
 
 impl TryFrom<Vec<Character>> for Cipher {
-    type Error = Bruh;
+    type Error = anyhow::Error;
 
     fn try_from(value: Vec<Character>) -> Result<Self, Self::Error> {
         let res = value.iter().unique().count();
@@ -76,7 +75,7 @@ impl TryFrom<Vec<Character>> for Cipher {
                     }
                     Err(_) => unreachable!(),
                 }),
-            _ => Err(bruh!(CipherError::Unique)),
+            _ => Err(bail!(CipherError::Unique)),
         }
     }
 }

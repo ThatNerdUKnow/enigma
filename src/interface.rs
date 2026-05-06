@@ -1,4 +1,3 @@
-use bruh_moment::Bruh;
 use clap::Parser;
 use inquire::{validator::ExactLengthValidator, MultiSelect, Select};
 use itertools::Itertools;
@@ -40,7 +39,7 @@ pub struct Config {
 }
 
 impl TryFrom<Config> for Enigma {
-    type Error = Bruh;
+    type Error = anyhow::Error;
 
     fn try_from(value: Config) -> Result<Self, Self::Error> {
         let rotor_config: RotorConfig = RotorConfig::try_from(value.rotors)?;

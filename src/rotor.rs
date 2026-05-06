@@ -5,7 +5,6 @@ use crate::{
     common::{Character, Position},
 };
 use anyhow::anyhow;
-use bruh_moment::Bruh;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumIter, EnumString};
@@ -60,7 +59,7 @@ impl RotorConfig {
 }
 
 impl TryFrom<[(Rotors, char); 3]> for RotorConfig {
-    type Error = Bruh;
+    type Error = anyhow::Error;
 
     fn try_from(value: [(Rotors, char); 3]) -> Result<Self, Self::Error> {
         let iter = value.iter();
@@ -91,7 +90,7 @@ impl FromIterator<Rotor> for RotorConfig {
 }
 
 impl TryFrom<(Rotors, char)> for Rotor {
-    type Error = Bruh;
+    type Error = anyhow::Error;
 
     fn try_from((variant, position): (Rotors, char)) -> Result<Self, Self::Error> {
         match variant {
@@ -108,7 +107,7 @@ impl TryFrom<(Rotors, char)> for Rotor {
 }
 
 impl Rotor {
-    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, Bruh> {
+    fn new(c: &str, n: &[char], p: char) -> Result<Rotor, anyhow::Error> {
         let cipher = Cipher::from_str(c).unwrap();
         let notches = n.iter().map(|p| Position::try_from(*p).unwrap()).collect();
         let position = Position::try_from(p)?;
